@@ -35,7 +35,7 @@ export const updateExclusion = async (req, res, next) => {
     res.json({message: 'Exclusion updated'})
 }
 export const deleteExclusion = async (req, res, next) => {
-    //TODO: also remove exclusion from meals
+    //TODO: also remove exclusion from meals and diets
     const id = req.params.id
     const deletedExclusion = await Exclusion.findByIdAndDelete(id);
     if(!deletedExclusion){

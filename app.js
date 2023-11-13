@@ -12,6 +12,7 @@ import {addressesRouter} from "./routes/addresses.js";
 import {exclusionsRouter} from "./routes/exclusions.js";
 import {mealTagsRouter} from "./routes/mealTags.js";
 import {mealsRouter} from "./routes/meals.js";
+import {dietsRouter} from "./routes/diets.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const app = express();
@@ -46,4 +47,5 @@ app.use('/promocode', promocodesRouter);
 app.use('/exclusions', exclusionsRouter);
 app.use('/tags', mealTagsRouter);
 app.use('/meals', mealsRouter);
+app.use('/diets', dietsRouter);
 app.listen(3001)
