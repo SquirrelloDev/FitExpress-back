@@ -16,6 +16,15 @@ import {dietsRouter} from "./routes/diets.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const app = express();
+const diskStorage = multer.diskStorage({
+    destination: (req,file,cb) => {
+        cb(null, 'public/images')
+    },
+    filename: (req,file,cb) => {
+      cb(null, file.originalname)
+    }
+})
+const upload = multer({dest: '/public/images', storage: diskStorage})
 app.use(logger('dev'));
 app.use(cors())
 app.use(bodyParser.json())
@@ -30,7 +39,7 @@ app.use((req, res, next) => {
     //przesyłamy te headery dalej
     next();
 })
-app.use('/public/images',express.static(path.join(__dirname, '/public/images')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
 app.use('/address', addressesRouter);
