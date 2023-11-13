@@ -1,6 +1,6 @@
 import express from "express";
-import {createMeal, deleteMeal, getMealById, getMeals, updateMeal} from "../controllers/mealsController.js";
 import multer from "multer";
+import {createDiet, deleteDiet, getDiet, getDiets, updateDiet} from "../controllers/dietsController.js";
 const diskStorage = multer.diskStorage({
     destination: (req,file,cb) => {
         cb(null, 'public/images')
@@ -20,10 +20,10 @@ const fileFilter = (req,file,cb) => {
 
 const upload = multer({storage: diskStorage, fileFilter: fileFilter})
 const router = express.Router();
-router.get('/', getMeals);
-router.get('/:id', getMealById)
-router.post('/', upload.single('image'), createMeal);
-router.put('/:id', upload.single('image'), updateMeal)
-router.delete('/:id', deleteMeal)
+router.get('/', getDiets);
+router.get('/:id', getDiet)
+router.post('/', upload.single('image'), createDiet);
+router.put('/:id', upload.single('image'), updateDiet)
+router.delete('/:id', deleteDiet)
 
-export { router as mealsRouter }
+export { router as dietsRouter }
