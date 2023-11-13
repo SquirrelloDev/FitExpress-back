@@ -1,7 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 const dietsSchema = new mongoose.Schema({
-    _id: {type: Schema.Types.ObjectId, unique: true},
-    name: {type: String, required: true},
+    name: {type: String, required: true, unique: true},
     diet_type: {type: String, required: true, enum: ['Fixed', 'Flexi']},
     img_path: {type: String},
     short_desc: {type: String, required: true},
@@ -12,8 +11,8 @@ const dietsSchema = new mongoose.Schema({
         proteins: {type: Number},
         carbs: {type: Number}
     },
-    exclusions: {type: [Schema.Types.ObjectId], ref: 'exclusions'},
+    exclusions: {type: [Schema.Types.ObjectId], ref: 'Exclusion'},
     prices: {type: Map, of: Number}
 
 })
-export default mongoose.model('diets', dietsSchema)
+export default mongoose.model('Diet', dietsSchema)

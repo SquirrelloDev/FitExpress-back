@@ -1,6 +1,5 @@
 import mongoose, {Schema} from "mongoose";
 const orderSchema = new mongoose.Schema({
-    _id: {type: Schema.Types.ObjectId, unique: true},
     diet_id: {type: Schema.Types.ObjectId, required: true, ref: 'diets'},
     user_id: {type: Schema.Types.ObjectId, required: true, ref: 'users'},
     price: {type: Number, required: true},

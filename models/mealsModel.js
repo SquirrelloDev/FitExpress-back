@@ -3,8 +3,8 @@ const mealsSchema = new mongoose.Schema({
     name: {type: String, required: true, unique: true},
     description: {type: String},
     img_path: {type: String},
-    tags_id: {type: [Schema.Types.ObjectId]},
-    exclusions: {type: [Schema.Types.ObjectId]},
+    tags_id: {type: [Schema.Types.ObjectId], ref: 'Tag'},
+    exclusions: {type: [Schema.Types.ObjectId], ref: 'Exclusion'},
     ingredients: {type: [String], required: true},
     nutrition_values: {
         calories: {type: Number, required: true},

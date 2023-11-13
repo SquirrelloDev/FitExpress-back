@@ -36,7 +36,7 @@ export const updateTag = async(req,res,next) => {
     res.json({message: 'Tag updated'})
 }
 export const deleteTag = async (req,res,next) => {
-    //TODO: also remove tag ids from meals
+    //TODO: also remove tag ids from meals and diets
     const id = req.params.id;
     const deletedTag = await Tag.findByIdAndDelete(id);
     if(!deletedTag){

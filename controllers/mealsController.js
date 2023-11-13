@@ -1,16 +1,14 @@
 import Meal from '../models/mealsModel.js'
 import fs from "fs";
-import afs from "fs/promises";
 import path from "path";
 export const getMeals = async (req,res,next) => {
-    const meals = await Meal.find({})
+    const meals = await Meal.find({}).populate('exclusions').populate('tags_id')
     if(meals){
         const mealsImage = meals.map((meal) => {
             let mealPath = path.join('public', 'images', meal.img_path);
             const data = fs.readFileSync(mealPath, {encoding: 'base64'})
             return {...meal._doc, imageBuffer: data}
         })
-        console.log(mealsImage)
         res.status(200)
         res.json(mealsImage);
     }
