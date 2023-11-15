@@ -40,16 +40,32 @@ export const createMeal = async (req,res,next) => {
     res.json({message: 'Meal created!'});
 }
 export const updateMeal = async (req,res,next) => {
-
+    const file = req.file
+    const id = req.params.id
+    const mealData = JSON.parse(req.body.data)
+    const existingMeal = await Meal.findByIdAndUpdate(id, {
+        ...mealData,
+        img_path: file.originalname,
+        tags_id: mealData.tagsId,
+        nutrition_values: mealData.nutritionValues
+    });
+    res.status(200)
+    res.json({message: 'Meal updated'})
 }
 export const deleteMeal = async (req,res,next) => {
-    //TODO: also delete meal image
     const id = req.params.id
     const deletedMeal = await Meal.findByIdAndDelete(id);
     if(!deletedMeal){
         res.status(404)
         return  res.json({message: 'Meal does not exist'});
     }
+    const mealPath = path.join('public', 'images', deletedMeal.img_path)
+    console.log(mealPath)
+    fs.unlink(mealPath, (err) =>{
+        if(err){
+            throw (err)
+        }
+    })
     res.status(200);
     res.json({message: 'Meal deleted!'})
 }

@@ -58,15 +58,22 @@ export const updateDiet = async (req,res,next) => {
     res.status(200);
     res.json({message: 'Diet updated!'})
 }
+//action only for admin!
 export const deleteDiet = async (req,res,next) => {
     //meals are not affected
-    //only for admin!
     const id = req.params.id
     const deletedDiet = await Diet.findByIdAndDelete(id)
     if(!deletedDiet){
         res.status(404);
         return res.json({mmessage: 'Diet does not exist!'})
     }
+    const mealPath = path.join('public', 'images', deletedDiet.img_path)
+    console.log(mealPath)
+    fs.unlink(mealPath, (err) =>{
+        if(err){
+            throw (err)
+        }
+    })
     res.status(200);
     res.json({message: 'diet deleted!'})
 }
