@@ -1,4 +1,6 @@
 import Tag from '../models/mealTagsModel.js'
+import Meal from "../models/mealsModel.js";
+import Diet from "../models/dietsModel.js";
 export const getTags = async (req,res,next) => {
     const tags = await Tag.find({});
     res.status(200);
@@ -36,13 +38,14 @@ export const updateTag = async(req,res,next) => {
     res.json({message: 'Tag updated'})
 }
 export const deleteTag = async (req,res,next) => {
-    //TODO: also remove tag ids from meals and diets
     const id = req.params.id;
     const deletedTag = await Tag.findByIdAndDelete(id);
     if(!deletedTag){
         res.status(404);
         return  res.json({message: 'Tag not found!'})
     }
+    await Meal.updateMany({}, {$pull: {"tags_id": deletedTag._id}});
+    await Diet.updateMany({}, {$pull: {"tags_id": deletedTag._id}});
     res.status(200);
-    res.json({message: 'Exclusion deleted!'})
+    res.json({message: 'Tag deleted!'})
 }
