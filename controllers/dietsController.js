@@ -1,8 +1,9 @@
 import Diet from '../models/dietsModel.js'
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 export const getDiets = async(req,res,next) =>{
-    const diets = await Diet.find({}).populate('exclusions');
+    const diets = await Diet.find({}).populate('exclusions').populate('tags_id');
     if(diets){
         const dietsImage = diets.map((diet) => {
             let dietPath = path.join('public', 'images', diet.img_path);
@@ -15,7 +16,7 @@ export const getDiets = async(req,res,next) =>{
 }
 export const getDiet = async (req,res,next) => {
     const id= req.params.id;
-    const diet = await Diet.findById(id).populate('exclusions');
+    const diet = await Diet.findById(id).populate('exclusions').populate('tags_id');
     if(!diet){
         res.status(404);
         return res.json({message: 'Diet does not exist!'})
@@ -31,10 +32,16 @@ export const createDiet = async (req,res,next) => {
         res.status(500)
         return res.json({message: 'Diet already exist!'})
     }
+    const fileBytes = fs.readFileSync(file.path);
+    const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
+    const imgObj = {
+        img_path: file.originalname,
+        uri: fileUri
+    }
     const newDiet = new Diet({
         ...dietData,
         diet_type: dietData.dietType,
-        img_path: file.originalname,
+        img: imgObj,
         short_desc: dietData.shortDesc,
         long_desc: dietData.longDesc,
         basic_info: dietData.basicInfo,
@@ -44,17 +51,31 @@ export const createDiet = async (req,res,next) => {
     res.json({message: 'Diet created!'})
 }
 export const updateDiet = async (req,res,next) => {
-    //TODO: Remove old image from disk
     const id = req.params.id;
     const file = req.file;
     const dietData = JSON.parse(req.body.data);
+    const fileBytes = fs.readFileSync(file.path);
+    const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
+    const fileObj = {
+        img_path: file.originalname,
+        uri: fileUri
+    }
     const diet = await Diet.findByIdAndUpdate(id, {
         ...dietData,
-        img_path: file.originalname,
+        img: fileObj,
         short_desc: dietData.shortDesc,
         long_desc: dietData.longDesc,
         basic_info: dietData.basicInfo
     })
+    //compare image uris
+    if(fileUri !== diet.img.uri){
+        const dietPath = path.join('public', 'images', diet.img.img_path)
+        fs.unlink(dietPath, (err) =>{
+        if(err){
+            throw (err)
+        }
+        })
+    }
     res.status(200);
     res.json({message: 'Diet updated!'})
 }
@@ -67,7 +88,7 @@ export const deleteDiet = async (req,res,next) => {
         res.status(404);
         return res.json({mmessage: 'Diet does not exist!'})
     }
-    const mealPath = path.join('public', 'images', deletedDiet.img_path)
+    const mealPath = path.join('public', 'images', deletedDiet.img.img_path)
     console.log(mealPath)
     fs.unlink(mealPath, (err) =>{
         if(err){

@@ -2,7 +2,10 @@ import mongoose, {Schema} from "mongoose";
 const mealsSchema = new mongoose.Schema({
     name: {type: String, required: true, unique: true},
     description: {type: String},
-    img_path: {type: String},
+    img: {
+        img_path: {type: String},
+        uri: {type: String}
+    },
     tags_id: {type: [Schema.Types.ObjectId], ref: 'Tag'},
     exclusions: {type: [Schema.Types.ObjectId], ref: 'Exclusion'},
     ingredients: {type: [String], required: true},
