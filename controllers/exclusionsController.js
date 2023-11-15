@@ -1,5 +1,6 @@
 import Exclusion from '../models/exclusionsModel.js'
-
+import Meal from '../models/mealsModel.js'
+import Diet from '../models/dietsModel.js'
 export const getExclusions = async (req, res, next) => {
     const exclusions = await Exclusion.find({});
     res.status(200);
@@ -35,13 +36,14 @@ export const updateExclusion = async (req, res, next) => {
     res.json({message: 'Exclusion updated'})
 }
 export const deleteExclusion = async (req, res, next) => {
-    //TODO: also remove exclusion from meals and diets
     const id = req.params.id
     const deletedExclusion = await Exclusion.findByIdAndDelete(id);
     if(!deletedExclusion){
         res.status(404);
         return  res.json({message: 'Exclusion not found!'})
     }
+    await Meal.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
+    await Diet.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
     res.status(200);
     res.json({message: 'Exclusion deleted!'})
 }
