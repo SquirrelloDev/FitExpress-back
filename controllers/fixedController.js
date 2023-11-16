@@ -1,7 +1,9 @@
 import DayFixed from '../models/fixedModel.js'
 //TODO: Add pagination here
 export const getFixedDays = async (req, res, next) => {
-    const fixedDays = await DayFixed.find({})
+    const page= req.query.page;
+    const pageSize = req.query.pageSize;
+    const fixedDays = await DayFixed.find({}).skip((page - 1) * pageSize).limit(pageSize)
         .populate({
             path: 'diets',
             populate: {

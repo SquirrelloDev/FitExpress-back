@@ -1,7 +1,9 @@
 import DayFlexi from '../models/flexiModel.js'
 //TODO: Add pagination here
-export const getDays = async (req,res,next) => {
-    const flexiDays = await DayFlexi.find({})
+export const getDays = async (req, res, next) => {
+    const page = req.query.page;
+    const pageSize = req.query.pageSize;
+    const flexiDays = await DayFlexi.find({}).skip((page - 1) * pageSize).limit(pageSize)
         .populate('morning_meals')
         .populate('lunch_meals')
         .populate('dinner_meals')
@@ -10,17 +12,17 @@ export const getDays = async (req,res,next) => {
     res.status(200)
     res.json(flexiDays);
 }
-export const getDay = async (req,res,next) => {
+export const getDay = async (req, res, next) => {
     const date = req.query.date;
     const flexiDay = await DayFlexi.findOne({date: date})
-    if(!flexiDay){
+    if (!flexiDay) {
         res.status(404);
         return res.json({message: "Day not found"})
     }
     res.status(200);
     res.json(flexiDay);
 }
-export const createDayEntry = async (req,res,next) => {
+export const createDayEntry = async (req, res, next) => {
     const dayData = req.body;
     const dayFlexi = new DayFlexi({
         date: dayData.date,
@@ -34,7 +36,7 @@ export const createDayEntry = async (req,res,next) => {
     res.status(201);
     res.json({message: 'Day added!'})
 }
-export const updateDayEntry = async (req,res,next) => {
+export const updateDayEntry = async (req, res, next) => {
     const date = req.query.date;
     const dayData = req.body
     const flexiDay = await DayFlexi.updateOne({date: date}, dayData)
@@ -42,10 +44,10 @@ export const updateDayEntry = async (req,res,next) => {
     res.json({message: `Day ${date} updated`})
 }
 //TODO: Add authorization token for this action
-export const deleteDayEntry = async (req,res,next) => {
+export const deleteDayEntry = async (req, res, next) => {
     const date = req.query.date;
     const deletedDay = await DayFlexi.findOneAndDelete({date: date});
-    if(!deletedDay){
+    if (!deletedDay) {
         res.status(404);
         return res.json({message: `Assignment for the date: ${date} does not exist!`})
     }
