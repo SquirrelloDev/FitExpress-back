@@ -14,6 +14,7 @@ import {mealTagsRouter} from "./routes/mealTags.js";
 import {mealsRouter} from "./routes/meals.js";
 import {dietsRouter} from "./routes/diets.js";
 import {dietDaysRouter} from "./routes/dietDays.js";
+import {ordersRouter} from "./routes/orders.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const app = express();
@@ -49,5 +50,6 @@ app.use('/exclusions', exclusionsRouter);
 app.use('/tags', mealTagsRouter);
 app.use('/meals', mealsRouter);
 app.use('/diets', dietsRouter);
-app.use('/days', dietDaysRouter)
+app.use('/days', dietDaysRouter);
+app.use('/orders', ordersRouter);
 app.listen(3001)

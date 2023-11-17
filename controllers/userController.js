@@ -1,5 +1,6 @@
 import User from '../models/userModel.js'
 import Address from '../models/addressesModel.js'
+import Order from '../models/ordersModel.js'
 import crypto from "crypto"
 import bcrypt from "bcrypt"
 
@@ -113,7 +114,8 @@ export const deleteUser = async(req, res, next) =>  {
         const userEntry = await User.findByIdAndDelete(id)
         if(userEntry){
         //also delete addresses, orders, etc.
-            const deletedAddresses = await Address.deleteMany({user_id: userEntry._id})
+            const deletedAddresses = await Address.deleteMany({user_id: id});
+            const deletedOrders = await Order.deleteMany({user_id: id})
             res.status(200);
             return res.json({
                 message: 'User successfully deleted'
