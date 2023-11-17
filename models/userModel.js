@@ -19,8 +19,8 @@ const usersSchema = new Schema({
         calories_demand: {type: Number},
         water_demand: {type: Number}
     },
-    order_ids: {type: [Schema.Types.ObjectId], ref: 'orders'},
-    addresses: {type: [Schema.Types.ObjectId], ref: 'adresses'},
-    redeemed_codes: {type: [Schema.Types.ObjectId], ref: 'promocodes'}
+    order_ids: {type: [Schema.Types.ObjectId], ref: 'Order'},
+    addresses: {type: [Schema.Types.ObjectId], ref: 'Address'},
+    redeemed_codes: {type: [Schema.Types.ObjectId], ref: 'Promocode'}
 })
 export default mongoose.model('User', usersSchema)

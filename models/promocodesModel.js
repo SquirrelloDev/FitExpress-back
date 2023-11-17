@@ -4,4 +4,4 @@ const promocodesSchema = new mongoose.Schema({
     discount: {type: Number, required: true},
     exp_date: {type: Schema.Types.Date, required: true}
 })
-export default mongoose.model('Promocodes', promocodesSchema)
+export default mongoose.model('Promocode', promocodesSchema)

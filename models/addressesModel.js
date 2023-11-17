@@ -16,4 +16,4 @@ const addresesSchema = new mongoose.Schema({
     is_default: {type: Boolean, required: true, default: false},
     user_id: {type: Schema.Types.ObjectId, ref: 'users'}
 })
-export default mongoose.model('address', addresesSchema)
+export default mongoose.model('Address', addresesSchema)
