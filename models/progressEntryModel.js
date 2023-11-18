@@ -1,6 +1,6 @@
 import mongoose, {Schema} from "mongoose";
 const progressEntrySchema = new Schema({
-    user_id: {type: Schema.Types.ObjectId, required: true},
+    user_id: {type: Schema.Types.ObjectId, required: true, ref: 'User'},
     weight_progress: [
         {
             date: {type: Schema.Types.Date, required: true},
