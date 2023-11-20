@@ -21,7 +21,7 @@ export const addEntry = async (req, res) => {
     const entryData = req.body;
     const userId = entryData.userId;
     const entryKind = req.query.kind;
-    switch (entryKind.toString()) {
+    switch (entryKind) {
         case 'weight':
             if(Object.keys(entryData.data).includes('water')){
                 res.status(422);
@@ -41,7 +41,31 @@ export const addEntry = async (req, res) => {
     res.json({message: 'Entry added'})
 }
 export const updateEntry = async (req, res) => {
-
+    const date = new Date(req.query.date);
+    const entryData = req.body;
+    const userId = entryData.userId;
+    const selectArr = req.query.kind === 'weight' ? 'weight_progress' : 'water_progress';
+    switch(req.query.kind){
+        case 'weight':
+            if(Object.keys(entryData.data).includes('water')){
+                res.status(422);
+                return res.json({mesasge: "The 'weight' key should appear for this kind"})
+            }
+            break;
+        case 'water':
+            if(Object.keys(entryData.data).includes('weight')){
+                res.status(422);
+                return res.json({mesasge: "The 'weight' key should appear for this kind"})
+            }
+            break;
+    }
+    const userProgressDoc = await ProgessEntry.findOne({user_id: userId}).select(selectArr);
+    const entries = req.query.kind === 'weight' ? userProgressDoc.weight_progress : userProgressDoc.water_progress;
+    const entryIdx= entries.findIndex(entry => entry.date.getTime() === date.getTime())
+    entries[entryIdx] = entryData.data;
+    await ProgessEntry.updateOne({user_id: userId}, {[selectArr]: entries});
+    res.status(200);
+    res.json({message: 'Entry updated!'})
 }
 export const deleteEntry = async (req, res) => {
     const userId = req.query.userId;

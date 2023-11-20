@@ -1,6 +1,7 @@
 import User from '../models/userModel.js'
 import Address from '../models/addressesModel.js'
 import Order from '../models/ordersModel.js'
+import ProgressEntry from '../models/progressEntryModel.js'
 import crypto from "crypto"
 import bcrypt from "bcrypt"
 
@@ -40,7 +41,14 @@ export const addNewUser = async (req, res, next) => {
             password: hashPasswd,
             health_data: userData.healthData,
         })
-        const result = await user.save()
+        const result = await user.save();
+        //create document of for the new user of his entries
+        const emptyProgressEntry = new ProgressEntry({
+            user_id: result._id,
+            weight_progress: [],
+            water_progress: []
+        })
+        await emptyProgressEntry.save();
     }
     catch (e) {
         
