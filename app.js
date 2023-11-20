@@ -17,6 +17,7 @@ import {dietDaysRouter} from "./routes/dietDays.js";
 import {ordersRouter} from "./routes/orders.js";
 import {reportsRouter} from "./routes/reports.js";
 import {entriesRouter} from "./routes/progressEntries.js";
+import {deliveryRouter} from "./routes/deliverPoints.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 const app = express();
@@ -56,4 +57,5 @@ app.use('/days', dietDaysRouter);
 app.use('/orders', ordersRouter);
 app.use('/reports', reportsRouter);
 app.use('/entries', entriesRouter);
+app.use('/delivery', deliveryRouter);
 app.listen(3001)
