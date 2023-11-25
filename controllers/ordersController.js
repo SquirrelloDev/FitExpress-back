@@ -46,6 +46,8 @@ export const createOrder = async (req, res) => {
         price: orderData.price,
         sub_date: orderData.subDate,
         with_weekends: orderData.withWeekends,
+        calories: orderData.calories,
+        ...(orderData.flexiTier && {flexi_tier: orderData.flexiTier})
     });
     const createdOrder = await order.save();
     await User.findByIdAndUpdate(orderData.userId, {$push: {'order_ids': createdOrder._id}})
@@ -61,7 +63,9 @@ export const updateOrder = async (req, res) => {
         user_id: orderData.userId,
         price: orderData.price,
         sub_date: orderData.subDate,
-        with_weekends: orderData.withWeekends
+        with_weekends: orderData.withWeekends,
+        calories: orderData.calories,
+        ...(orderData.flexiTier && {flexi_tier: orderData.flexiTier})
     })
     if(!updatedOrder){
         res.status(404);
