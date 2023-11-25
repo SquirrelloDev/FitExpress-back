@@ -6,7 +6,6 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from 'cors'
 import multer from 'multer'
-import cron from 'node-cron';
 import { usersRouter } from './routes/users.js'
 import {promocodesRouter} from "./routes/promocodes.js";
 import {addressesRouter} from "./routes/addresses.js";
@@ -61,4 +60,6 @@ app.use('/reports', reportsRouter);
 app.use('/entries', entriesRouter);
 app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
+//TODO: enable cronjobs when the time comes
+// setupCronJobs();
 app.listen(3001)
