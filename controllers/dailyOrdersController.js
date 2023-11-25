@@ -28,13 +28,14 @@ export const getDailyOrderByDate = async (req, res) => {
 export const addOrderToList = async (req, res) => {
     const orderData = req.body;
     //check if date timestamp is within the current day timespan
-    let reqTimestamp = new Date(orderData.date).setHours(0, 0, 0, 0);
-    const today = new Date().setHours(0, 0, 0, 0)
+
+    let reqTimestamp = new Date(orderData.date).setHours(1, 0, 0, 0);
+    const today = new Date().setHours(1, 0, 0, 0)
     if (reqTimestamp !== today) {
         res.status(400);
         return res.json({message: 'Incorrect date'})
     }
-    const currentDailyDoc = await DailyOrder.findOne({date: orderData.date});
+    const currentDailyDoc = await DailyOrder.findOne({date: new Date(today).toISOString()});
     if (currentDailyDoc.isAddingLocked) {
         res.status(500);
         return res.json({message: "You can't alter your choice now"})
@@ -72,7 +73,7 @@ export const addOrderToList = async (req, res) => {
 
 //TODO:node-cron also here
 export const lockAddingOrders = async () => {
-    const currentDate = new Date().setHours(23, 0, 0, 0);
+    const currentDate = new Date().setHours(1, 0, 0, 0);
     const currentDateISO = new Date(currentDate).toISOString();
     console.log(currentDateISO)
     const dailyEntry = await DailyOrder.findOne({date: currentDateISO});
@@ -100,15 +101,14 @@ export const lockAddingOrders = async () => {
         if (ordersToAdd.length === 0) {
             continue;
         }
-
         //sprawdź które z brakujących orderów są aktywne poprzez datę. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
         for (const orderToAdd of ordersToAdd) {
-            const orderFromCollection = await Order.findById(orderToAdd._id);
+            const orderFromCollection = await Order.findById(orderToAdd.toString());
             if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime())) {
                 console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                 continue;
             }
-            if(isWeekend(currentDate) === orderFromCollection.with_weekends){
+            if (isWeekend(currentDate) === orderFromCollection.with_weekends) {
                 console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                 continue;
             }
@@ -150,11 +150,3 @@ export const lockAddingOrders = async () => {
     }
 }
 //TODO:node-cron here
-export const initDay = async (req, res) => {
-    const newDay = new DailyOrder({
-        date: new Date().setHours(23, 0, 0, 0),
-        orders: []
-    })
-    await newDay.save()
-    res.json({message: 'New day created!'})
-}
