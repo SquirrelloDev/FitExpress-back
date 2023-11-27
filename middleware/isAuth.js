@@ -22,7 +22,13 @@ const isAuth = (req,res,next) => {
       error.statusCode = 401;
       throw error
   }
-  req.userInfo = decodedToken;
+  req.userInfo = {
+      _id: decodedToken._id,
+      name: decodedToken.name,
+      email: decodedToken.email,
+      birthDate: decodedToken.birth_date,
+      role: decodedToken.role,
+  };
   next()
 }
 export default isAuth;
