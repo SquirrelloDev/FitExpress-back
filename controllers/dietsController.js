@@ -3,10 +3,11 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 export const getDiets = async(req,res,next) =>{
-    const diets = await Diet.find({}).populate('exclusions').populate('tags_id');
+    //CAUTION! Here will be also fetched the generic flexi diet! With this syntax we will get only fixed diets
+    const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id');
     if(diets){
         const dietsImage = diets.map((diet) => {
-            let dietPath = path.join('public', 'images', diet.img_path);
+            let dietPath = path.join('public', 'images', diet.img.img_path);
             const data = fs.readFileSync(dietPath, {encoding: 'base64'})
             return {...diet._doc, imageBuffer: data}
         })
@@ -21,8 +22,10 @@ export const getDiet = async (req,res,next) => {
         res.status(404);
         return res.json({message: 'Diet does not exist!'})
     }
+    const dietImgPath = path.join('public', 'images', diet.img.img_path)
+    const imgData = fs.readFileSync(dietImgPath, {encoding: 'base64'});
     res.status(200)
-    res.json(diet)
+    res.json({...diet._doc, imageBuffer: imgData});
 }
 export const createDiet = async (req,res,next) => {
     const file = req.file;
