@@ -82,6 +82,10 @@ export const updateReport = async (req, res, next) => {
     const id = req.params.id;
     const reportData = req.body;
     try {
+        const reportToUpdate = await Report.findById(id);
+        if(reportToUpdate.report_status !== 'new' && !checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+            return next(ApiError('You cannot change the report since the status has been updated'))
+        }
         const updatedReport = await Report.findByIdAndUpdate(id, {
             ...reportData,
             order_id: reportData.orderId,
@@ -124,6 +128,10 @@ export const deleteReport = async (req, res, next) => {
     }
     const id = req.params.id;
     try {
+        const reportToDelete = await Report.findById(id);
+        if(reportToDelete.report_status !== 'new' && !checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+            return next(ApiError('You cannot change the report since the status has been updated'))
+        }
         const deletedReport = await Report.findByIdAndDelete(id);
         if (!deletedReport) {
             return next(ApiError("Report does not exist!", 404))

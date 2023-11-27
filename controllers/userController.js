@@ -35,9 +35,10 @@ export const addNewUser = async (req, res, next) => {
             birth_date: userData.birth_date,
             password: hashPasswd,
             health_data: userData.healthData,
+            role: process.env.ACCESS_USER
         })
         const result = await user.save();
-        //create document of for the new user of his entries
+        //create document of for the new user and his entries
         const emptyProgressEntry = new ProgressEntry({
             user_id: result._id,
             weight_progress: [],
@@ -86,7 +87,6 @@ export const updateUserData = async (req, res, next) => {
     const userData = req.body;
     try {
         const user = await User.findByIdAndUpdate(id, userData, {returnDocument: "after"})
-        console.log(user)
         res.status(200);
         res.json({
             message: "User updated!"
