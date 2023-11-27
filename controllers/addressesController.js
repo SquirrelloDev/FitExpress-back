@@ -1,5 +1,6 @@
 import Address from '../models/addressesModel.js'
 import User from '../models/userModel.js'
+import Order from '../models/ordersModel.js'
 export const getAddresses = async (req, res, next) => {
     const addresses = await Address.find({})
     res.status(200);
@@ -16,6 +17,12 @@ export const getAddressById = async (req, res, next) => {
     }
     res.status(200)
     res.json(address)
+}
+export const getUserAddresses = async (req,res) => {
+  const userId = req.params.id;
+  const addresses = await Address.find({user_id: userId});
+  res.status(200);
+  res.json(addresses)
 }
 export const addAddress = async (req, res, next) => {
     const addressData = req.body.address;
@@ -65,6 +72,7 @@ export const deleteAddress = async (req,res,next) => {
         const updatedAddresses = userAddresses.filter(addressId => addressId.toString() !==  id)
         console.log('Updated', updatedAddresses)
         await User.updateOne({_id: user._id}, {addresses: updatedAddresses})
+        await Order.updateMany({address_id: id}, {address_id: ''});
         res.status(200);
         return  res.json({
             message: "Address deleted sucessfully!",
