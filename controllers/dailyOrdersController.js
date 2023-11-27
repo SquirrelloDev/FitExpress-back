@@ -71,16 +71,14 @@ export const addOrderToList = async (req, res) => {
 
 }
 
-//TODO:node-cron also here
 export const lockAddingOrders = async () => {
     const currentDate = new Date().setHours(1, 0, 0, 0);
     const currentDateISO = new Date(currentDate).toISOString();
     console.log(currentDateISO)
-    const dailyEntry = await DailyOrder.findOne({date: currentDateISO});
+    const dailyEntry = await DailyOrder.findOne({date: "2023-11-26T00:00:00.000+00:00"});
     const users = await User.find({});
     const orders = dailyEntry.orders;
     const plainUserIdsArr = users.map(userId => userId._id);
-    //TODO:turn 'locked' flag to true
     await DailyOrder.findOneAndUpdate({date: currentDateISO}, {isAddingLocked: true});
 
     for (const userId of plainUserIdsArr) {
@@ -104,7 +102,7 @@ export const lockAddingOrders = async () => {
         //sprawdź które z brakujących orderów są aktywne poprzez datę. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
         for (const orderToAdd of ordersToAdd) {
             const orderFromCollection = await Order.findById(orderToAdd.toString());
-            if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime())) {
+            if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || orderFromCollection.address_id === "") {
                 console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                 continue;
             }
@@ -149,4 +147,3 @@ export const lockAddingOrders = async () => {
         }
     }
 }
-//TODO:node-cron here

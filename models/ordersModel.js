@@ -2,6 +2,7 @@ import mongoose, {Schema} from "mongoose";
 const orderSchema = new mongoose.Schema({
     diet_id: {type: Schema.Types.ObjectId, required: true, ref: 'Diet'},
     user_id: {type: Schema.Types.ObjectId, required: true, ref: 'User'},
+    address_id: {type: Schema.Types.ObjectId, required:true, ref: 'Address'},
     price: {type: Number, required: true},
     sub_date: {
         from: {type: Schema.Types.Date, required: true},
