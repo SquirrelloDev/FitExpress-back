@@ -44,7 +44,7 @@ export const createDiet = async (req, res, next) => {
         const dietData = JSON.parse(req.body.data)
         const existingDiet = await Diet.findOne({name: dietData.name});
         if (existingDiet) {
-            return next(ApiError('Diet already exist!'))
+            return next(ApiError('Diet already exist!', 409))
         }
         const fileBytes = fs.readFileSync(file.path);
         const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')

@@ -23,7 +23,7 @@ export const addNewUser = async (req, res, next) => {
     try {
         const existingUser = await User.findOne({email: userData.email})
         if (existingUser) {
-            return next(ApiError('User already exist!'));
+            return next(ApiError('User already exist!', 409));
         }
         const hashPasswd = await bcrypt.hash(userData.password, 12)
         const user = new User({

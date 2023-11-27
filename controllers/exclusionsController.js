@@ -18,7 +18,7 @@ export const addExclusion = async (req, res, next) => {
     try {
         const existingExclusion = await Exclusion.findOne({name: exclusionName})
         if (existingExclusion) {
-            return next(ApiError('Exclusion already exists!'))
+            return next(ApiError('Exclusion already exists!', 409))
         }
         const exclusion = new Exclusion({
             name: exclusionName
