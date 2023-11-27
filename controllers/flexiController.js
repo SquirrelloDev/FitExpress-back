@@ -24,6 +24,8 @@ export const getDay = async (req, res, next) => {
 }
 export const createDayEntry = async (req, res, next) => {
     const dayData = req.body;
+    //TODO: check if there is no enrty with the same date
+    try{
     const dayFlexi = new DayFlexi({
         date: dayData.date,
         morning_meals: dayData.morningMeals,
@@ -33,6 +35,11 @@ export const createDayEntry = async (req, res, next) => {
         supper_meals: dayData.supperMeals,
     })
     await dayFlexi.save()
+    }
+    catch (e){
+        res.status(400);
+        return res.json({message: 'Day with provided date already exist!'})
+    }
     res.status(201);
     res.json({message: 'Day added!'})
 }
@@ -43,7 +50,6 @@ export const updateDayEntry = async (req, res, next) => {
     res.status(200);
     res.json({message: `Day ${date} updated`})
 }
-//TODO: Add authorization token for this action
 export const deleteDayEntry = async (req, res, next) => {
     const date = req.query.date;
     const deletedDay = await DayFlexi.findOneAndDelete({date: date});

@@ -1,4 +1,5 @@
 import DayFixed from '../models/fixedModel.js'
+import {parseIntoMidnightISO} from "../utils/dates.js";
 //TODO: Add pagination here
 export const getFixedDays = async (req, res, next) => {
     const page= req.query.page;
@@ -41,7 +42,8 @@ export const getFixedDays = async (req, res, next) => {
 }
 export const getFixedDay = async (req, res, next) => {
     const date = req.query.date;
-    const fixedDay = await DayFixed.findOne({date: date}).populate({
+    const isoDate = parseIntoMidnightISO(date);
+    const fixedDay = await DayFixed.findOne({date: isoDate}).populate({
         path: 'diets',
         populate: {
             path: 'diet_id'
@@ -88,15 +90,16 @@ export const createFixedDayEntry = async (req, res, next) => {
 }
 export const updateFixedDayEntry = async (req, res, next) => {
     const date = req.query.date;
+    const isoDate = parseIntoMidnightISO(date);
     const dayData = req.body
-    const fixedDay = await DayFixed.updateOne({date: date}, dayData)
+    const fixedDay = await DayFixed.updateOne({date: isoDate}, dayData)
     res.status(200);
     res.json({message: `Day ${date} updated`})
 }
-//TODO: Check authorization token for this action
 export const deleteFixedDayEntry = async (req, res, next) => {
     const date = req.query.date;
-    const deletedDay = await DayFixed.findOneAndDelete({date: date});
+    const isoDate = parseIntoMidnightISO(date)
+    const deletedDay = await DayFixed.findOneAndDelete({date: isoDate});
     if (!deletedDay) {
         res.status(404);
         return res.json({message: `Assignment for the date: ${date} does not exist!`})
