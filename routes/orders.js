@@ -6,13 +6,14 @@ import {
     getOrdersByDiet,
     getUserOrders, updateOrder
 } from "../controllers/ordersController.js";
+import isAuth from "../middleware/isAuth.js";
 
 const router = express.Router();
-router.get('/', getAllOrders);
-router.get('/user', getUserOrders);
-router.get('/diet', getOrdersByDiet);
-router.get('/:id', getOrderById);
-router.post('/', createOrder);
-router.put('/:id', updateOrder);
-router.delete('/:id', deleteOrder)
+router.get('/', isAuth, getAllOrders);
+router.get('/user', isAuth, getUserOrders);
+router.get('/diet', isAuth, getOrdersByDiet);
+router.get('/:id', isAuth, getOrderById);
+router.post('/', isAuth, createOrder);
+router.put('/:id', isAuth, updateOrder);
+router.delete('/:id', isAuth, deleteOrder)
 export {router as ordersRouter}

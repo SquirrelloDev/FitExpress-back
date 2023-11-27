@@ -1,6 +1,7 @@
 import express from "express";
 import multer from "multer";
 import {createMeal, deleteMeal, getMealById, getMeals, updateMeal} from "../controllers/mealsController.js";
+import isAuth from "../middleware/isAuth.js";
 const router = express.Router();
 const diskStorage = multer.diskStorage({
     destination: (req,file,cb) => {
@@ -20,10 +21,10 @@ const fileFilter = (req,file,cb) => {
 }
 
 const upload = multer({storage: diskStorage, fileFilter: fileFilter})
-router.get('/', getMeals);
-router.get('/:id', getMealById)
-router.post('/', upload.single('image'), createMeal);
-router.put('/:id', upload.single('image'), updateMeal);
-router.delete('/:id', deleteMeal)
+router.get('/', isAuth, getMeals);
+router.get('/:id', isAuth, getMealById)
+router.post('/', isAuth, upload.single('image'), createMeal);
+router.put('/:id', isAuth, upload.single('image'), updateMeal);
+router.delete('/:id', isAuth, deleteMeal)
 
 export { router as mealsRouter }
