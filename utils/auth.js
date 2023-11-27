@@ -6,3 +6,6 @@ const genSecret = () => {
 export const signToken = (data, options = {expiresIn: "1h"}) => {
   return jwt.sign(data, process.env.JSECRET, options);
 }
+export const checkPermissions = (userInfo, minAccLvl) => {
+  return userInfo.role >= minAccLvl;
+}
