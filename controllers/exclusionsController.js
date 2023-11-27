@@ -1,49 +1,67 @@
 import Exclusion from '../models/exclusionsModel.js'
 import Meal from '../models/mealsModel.js'
 import Diet from '../models/dietsModel.js'
+import {ApiError} from "../utils/errors.js";
+
 export const getExclusions = async (req, res, next) => {
-    const exclusions = await Exclusion.find({});
-    res.status(200);
-    res.json(exclusions)
+    try {
+        const exclusions = await Exclusion.find({});
+        res.status(200);
+        res.json(exclusions)
+
+    } catch (e) {
+        next(e);
+    }
 }
 export const addExclusion = async (req, res, next) => {
     const exclusionName = req.body.name;
-    const existingExclusion = await Exclusion.findOne({name: exclusionName})
-    if(existingExclusion){
-        res.status(500)
-        return res.json({message: 'Exclusion already exists!'})
+    try {
+        const existingExclusion = await Exclusion.findOne({name: exclusionName})
+        if (existingExclusion) {
+            return next(ApiError('Exclusion already exists!'))
+        }
+        const exclusion = new Exclusion({
+            name: exclusionName
+        })
+        const createdExclusion = await exclusion.save()
+        if (!createdExclusion) {
+            return next(ApiError('Error while creating an exclusion'))
+        }
+        res.status(201)
+        res.json({message: 'Exclusion added'})
+
+    } catch (e) {
+        next(e);
     }
-    const exclusion = new Exclusion({
-        name: exclusionName
-    })
-    const createdExclusion = await exclusion.save()
-    if (!createdExclusion) {
-        res.status(500);
-        return res.json({message: 'Error while creating an exclusion'})
-    }
-    res.status(201)
-    res.json({message: 'Exclusion added'})
 }
 export const updateExclusion = async (req, res, next) => {
     const exclusionName = req.body.name;
     const id = req.params.id
-    const updatedExclusion = await Exclusion.findByIdAndUpdate(id, {name: exclusionName})
-    if (!updatedExclusion) {
-        res.status(500);
-        return res.json({message: 'Error while creating an exclusion'})
+    try {
+        const updatedExclusion = await Exclusion.findByIdAndUpdate(id, {name: exclusionName})
+        if (!updatedExclusion) {
+            return next(ApiError('Error while updating an exclusion'))
+        }
+        res.status(200)
+        res.json({message: 'Exclusion updated'})
+
+    } catch (e) {
+        next(e);
     }
-    res.status(200)
-    res.json({message: 'Exclusion updated'})
 }
 export const deleteExclusion = async (req, res, next) => {
     const id = req.params.id
-    const deletedExclusion = await Exclusion.findByIdAndDelete(id);
-    if(!deletedExclusion){
-        res.status(404);
-        return  res.json({message: 'Exclusion not found!'})
+    try {
+        const deletedExclusion = await Exclusion.findByIdAndDelete(id);
+        if (!deletedExclusion) {
+            return next(ApiError('Exclusion not found!', 404))
+        }
+        await Meal.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
+        await Diet.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
+        res.status(200);
+        res.json({message: 'Exclusion deleted!'})
+
+    } catch (e) {
+        next(e);
     }
-    await Meal.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
-    await Diet.updateMany({}, {$pull: {"exclusions": deletedExclusion._id}});
-    res.status(200);
-    res.json({message: 'Exclusion deleted!'})
 }

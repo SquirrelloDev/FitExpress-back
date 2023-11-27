@@ -1,34 +1,49 @@
 import Report from '../models/reportsModel.js'
-export const getAllReports = async (req,res) => {
+import {ApiError} from "../utils/errors.js";
+
+export const getAllReports = async (req, res, next) => {
     const page = req.query.page;
     const pageSize = req.query.pageSize;
-    const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize);
-    res.status(200);
-    res.json(reports);
+    try {
+        const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        res.status(200);
+        res.json(reports);
+    } catch (e) {
+        next(e);
+    }
+
 }
-export const getReportById = async (req,res) => {
-  const id = req.params.id;
-  const report = await Report.findById(id);
-  if(!report){
-      res.status(404);
-      return res.json({message: "Report does not exist!"})
-  }
-  res.status(200);
-  res.json(report);
+export const getReportById = async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const report = await Report.findById(id);
+        if (!report) {
+            return next(ApiError("Report does not exist!", 404))
+        }
+        res.status(200);
+        res.json(report);
+    } catch (e) {
+        next(e);
+    }
+
 }
-export const getUserReports = async (req,res) => {
+export const getUserReports = async (req, res, next) => {
     const userId = req.query.userId;
     const page = req.query.page;
     const pageSize = req.query.pageSize;
-    const userReports = await Report.find({user_id: userId}).skip((page - 1) * pageSize).limit(pageSize).populate("order_id");
-    if(!userReports){
-        res.status(404);
-        return res.json({message: "User haven't create any report"})
+    try {
+        const userReports = await Report.find({user_id: userId}).skip((page - 1) * pageSize).limit(pageSize).populate("order_id");
+        if (!userReports) {
+            return next(ApiError("User haven't create any report", 404))
+        }
+        res.status(200);
+        res.json(userReports)
+    } catch (e) {
+        next(e)
     }
-    res.status(200);
-    res.json(userReports)
+
 }
-export const createReport = async (req,res) => {
+export const createReport = async (req, res, next) => {
     const reportData = req.body;
     const report = new Report({
         ...reportData,
@@ -38,46 +53,63 @@ export const createReport = async (req,res) => {
         delivery_date: reportData.deliveryDate,
         created_at: new Date()
     })
-    await report.save();
-    res.status(201);
-    res.json({message: "report created!"})
+    try {
+        await report.save();
+        res.status(201);
+        res.json({message: "report created!"})
+    } catch (e) {
+        next(e);
+    }
+
 }
-export const updateReport = async (req,res) => {
+export const updateReport = async (req, res, next) => {
     const id = req.params.id;
     const reportData = req.body;
-    const updatedReport = await Report.findByIdAndUpdate(id, {
-        ...reportData,
-        order_id: reportData.orderId,
-        deliver_date: reportData.deliveryDate,
-    })
-    if(!updatedReport){
-        res.status(404);
-        return res.json({message: "Report does not exist!"})
+    try {
+        const updatedReport = await Report.findByIdAndUpdate(id, {
+            ...reportData,
+            order_id: reportData.orderId,
+            deliver_date: reportData.deliveryDate,
+        })
+        if (!updatedReport) {
+            return next(ApiError("Report does not exist!", 404))
+        }
+        res.status(200);
+        res.json({message: "report updated!"})
+    } catch (e) {
+        next(e);
     }
-    res.status(200);
-    res.json({message: "report updated!"})
+
 }
-export const updateReportStatus = async (req,res) =>{
+export const updateReportStatus = async (req, res, next) => {
     const id = req.params.id;
-    const status =req.query.status;
-    const updatedReport = await Report.findByIdAndUpdate(id, {
-        report_status: status
-    })
-    if(!updatedReport){
-        res.status(404);
-        return res.json({message: "Report does not exist!"})
+    const status = req.query.status;
+    try {
+        const updatedReport = await Report.findByIdAndUpdate(id, {
+            report_status: status
+        })
+        if (!updatedReport) {
+            return next(ApiError("Report does not exist!", 404))
+        }
+        res.status(200);
+        res.json({message: "report's status updated!"})
+    } catch (e) {
+        next(e);
     }
-    res.status(200);
-    res.json({message: "report's status updated!"})
+
 }
 //TODO: Add token
-export const deleteReport = async (req,res) => {
+export const deleteReport = async (req, res, next) => {
     const id = req.params.id;
-    const deletedReport = await Report.findByIdAndDelete(id);
-    if(!deletedReport){
-        res.status(404);
-        return res.json({message: "Report does not exist!"})
+    try {
+        const deletedReport = await Report.findByIdAndDelete(id);
+        if (!deletedReport) {
+            return next(ApiError("Report does not exist!", 404))
+        }
+        res.status(200);
+        res.json({message: "report deleted!"})
+    } catch (e) {
+        next(e);
     }
-    res.status(200);
-    res.json({message: "report deleted!"})
+
 }
