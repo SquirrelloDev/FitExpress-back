@@ -3,8 +3,12 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getMeals = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const meals = await Meal.find({}).populate('exclusions').populate('tags_id')
         if (meals) {
@@ -22,6 +26,9 @@ export const getMeals = async (req, res, next) => {
 
 }
 export const getMealById = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const meal = await Meal.findById(id);
@@ -36,6 +43,9 @@ export const getMealById = async (req, res, next) => {
 
 }
 export const createMeal = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const mealData = JSON.parse(req.body.data);
         const file = req.file;
@@ -63,6 +73,9 @@ export const createMeal = async (req, res, next) => {
 
 }
 export const updateMeal = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const file = req.file
     const id = req.params.id
     try {
@@ -96,6 +109,9 @@ export const updateMeal = async (req, res, next) => {
 
 }
 export const deleteMeal = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id
     try {
         const deletedMeal = await Meal.findByIdAndDelete(id);

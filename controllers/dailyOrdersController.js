@@ -6,8 +6,12 @@ import DayFixed from '../models/fixedModel.js';
 import DayFlexi from '../models/flexiModel.js'
 import {isWeekend} from "../utils/dates.js";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getAllDailyOrders = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const page = req.query.page;
     const pageSize = req.query.pageSize;
     try {
@@ -22,6 +26,9 @@ export const getAllDailyOrders = async (req, res, next) => {
     }
 }
 export const getDailyOrderByDate = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date
     try {
         const currentDailyDoc = await DailyOrder.findOne({date: date});
@@ -36,6 +43,9 @@ export const getDailyOrderByDate = async (req, res, next) => {
     }
 }
 export const addOrderToList = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const orderData = req.body;
     //check if date timestamp is within the current day timespan
 

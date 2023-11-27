@@ -3,8 +3,12 @@ import fs from "fs";
 import path from "path";
 import crypto from "crypto";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getDiets = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     //CAUTION! Here will be also fetched the generic flexi diet! With this syntax we will get only fixed diets
     try {
         const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id');
@@ -23,6 +27,9 @@ export const getDiets = async (req, res, next) => {
     }
 }
 export const getDiet = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const diet = await Diet.findById(id).populate('exclusions').populate('tags_id');
@@ -39,6 +46,9 @@ export const getDiet = async (req, res, next) => {
     }
 }
 export const createDiet = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const file = req.file;
     try {
         const dietData = JSON.parse(req.body.data)
@@ -69,6 +79,9 @@ export const createDiet = async (req, res, next) => {
     }
 }
 export const updateDiet = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     const file = req.file;
     try {
@@ -105,6 +118,9 @@ export const updateDiet = async (req, res, next) => {
 }
 //action only for admin!
 export const deleteDiet = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     //meals are not affected
     const id = req.params.id
     try {

@@ -3,10 +3,13 @@ import Address from '../models/addressesModel.js'
 import Order from '../models/ordersModel.js'
 import ProgressEntry from '../models/progressEntryModel.js'
 import bcrypt from "bcrypt"
-import {signToken} from "../utils/auth.js";
+import {checkPermissions, signToken} from "../utils/auth.js";
 import {ApiError} from "../utils/errors.js";
 
 export const getAllUsers = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const users = await User.find({});
         if (!users) {
@@ -76,6 +79,9 @@ export const logInUser = async (req, res, next) => {
 
 }
 export const updateUserData = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     const userData = req.body;
     try {
@@ -90,6 +96,9 @@ export const updateUserData = async (req, res, next) => {
     }
 }
 export const updateUserHealthcard = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const healthData = req.body.healthData
     try {
         const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData}, {returnDocument: "after"})
@@ -104,6 +113,9 @@ export const updateUserHealthcard = async (req, res, next) => {
 
 }
 export const deleteUser = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const userEntry = await User.findByIdAndDelete(id)

@@ -1,8 +1,12 @@
 import Promocode from '../models/promocodesModel.js'
 import User from '../models/userModel.js'
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getPromocodes = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const promocodes = await Promocode.find({});
         if (!promocodes) {
@@ -16,6 +20,9 @@ export const getPromocodes = async (req, res, next) => {
 
 }
 export const getPromocodeByName = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const promoName = req.params.name;
     try {
         const promocode = await Promocode.findOne({name: promoName});
@@ -33,6 +40,9 @@ export const getPromocodeByName = async (req, res, next) => {
 
 }
 export const createPromocode = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const promoData = req.body;
     try {
         const existingPromocode = await Promocode.findOne({name: promoData.name});
@@ -55,6 +65,9 @@ export const createPromocode = async (req, res, next) => {
 
 }
 export const updatePromoData = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     const promoData = req.body;
     try {
@@ -71,6 +84,9 @@ export const updatePromoData = async (req, res, next) => {
 
 }
 export const deletePromocode = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const deletedPromocode = await Promocode.findByIdAndDelete(id);
@@ -87,6 +103,9 @@ export const deletePromocode = async (req, res, next) => {
 
 }
 export const assignPromoToUser = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const paymentData = req.body;
     const userId = paymentData.userId;
     const appliedPromocode = paymentData.appliedPromocode;

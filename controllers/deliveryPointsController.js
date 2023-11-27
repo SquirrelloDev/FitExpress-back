@@ -1,8 +1,12 @@
 import DeliveryPoint from '../models/deliveryPointsModel.js'
 import getDistanceFromCoords from "../utils/geoDistance.js";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getAllPoints = async (req, res) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const points = await DeliveryPoint.find({});
         res.status(200);
@@ -13,6 +17,9 @@ export const getAllPoints = async (req, res) => {
     }
 }
 export const getPointByCoords = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const userLat = req.query.lat;
     const userLng = req.query.lng;
     let inRange = false;
@@ -34,6 +41,9 @@ export const getPointByCoords = async (req, res, next) => {
 
 }
 export const getPointById = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const pointId = req.params.id
     try {
         const point = await DeliveryPoint.findById(pointId);
@@ -48,6 +58,9 @@ export const getPointById = async (req, res, next) => {
     }
 }
 export const addPoint = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const pointData = req.body
     const point = new DeliveryPoint(pointData);
     try {
@@ -61,6 +74,9 @@ export const addPoint = async (req, res, next) => {
 }
 //admin only
 export const updatePoint = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const pointId = req.params.id
     const pointData = req.body;
     try {
@@ -77,6 +93,9 @@ export const updatePoint = async (req, res, next) => {
 }
 //admin only
 export const deletePoint = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const pointId = req.params.id;
     try {
         const deletedPoint = await DeliveryPoint.findByIdAndDelete(pointId);

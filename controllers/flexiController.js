@@ -1,7 +1,11 @@
 import DayFlexi from '../models/flexiModel.js'
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 //TODO: Add pagination here
 export const getDays = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const page = req.query.page;
     const pageSize = req.query.pageSize;
     try {
@@ -19,6 +23,9 @@ export const getDays = async (req, res, next) => {
 
 }
 export const getDay = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     try {
         const flexiDay = await DayFlexi.findOne({date: date})
@@ -33,6 +40,9 @@ export const getDay = async (req, res, next) => {
     }
 }
 export const createDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const dayData = req.body;
     //TODO: check if there is no enrty with the same date
     try {
@@ -52,6 +62,9 @@ export const createDayEntry = async (req, res, next) => {
     res.json({message: 'Day added!'})
 }
 export const updateDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     const dayData = req.body
     try {
@@ -63,6 +76,9 @@ export const updateDayEntry = async (req, res, next) => {
     }
 }
 export const deleteDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     try {
         const deletedDay = await DayFlexi.findOneAndDelete({date: date});

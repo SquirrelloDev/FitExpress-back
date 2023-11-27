@@ -1,7 +1,11 @@
 import ProgessEntry from '../models/progressEntryModel.js'
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getAllProgress = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const page = req.query.page;
     const pageSize = req.query.pageSize;
     try {
@@ -14,6 +18,9 @@ export const getAllProgress = async (req, res, next) => {
 
 }
 export const getProgressByUser = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const userId = req.query.userId;
     try {
         const entry = await ProgessEntry.find({user_id: userId})
@@ -28,6 +35,9 @@ export const getProgressByUser = async (req, res, next) => {
     }
 }
 export const addEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const entryData = req.body;
     const userId = entryData.userId;
     const entryKind = req.query.kind;
@@ -54,6 +64,9 @@ export const addEntry = async (req, res, next) => {
 
 }
 export const updateEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = new Date(req.query.date);
     const entryData = req.body;
     const userId = entryData.userId;
@@ -84,6 +97,9 @@ export const updateEntry = async (req, res, next) => {
 
 }
 export const deleteEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const userId = req.query.userId;
     const date = req.query.date
     const entryKind = req.query.kind;

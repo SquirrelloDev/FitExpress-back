@@ -2,8 +2,12 @@ import Address from '../models/addressesModel.js'
 import User from '../models/userModel.js'
 import Order from '../models/ordersModel.js'
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getAddresses = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const addresses = await Address.find({})
         res.status(200);
@@ -14,6 +18,9 @@ export const getAddresses = async (req, res, next) => {
     }
 }
 export const getAddressById = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const addressId = req.params.id;
     try {
         const address = await Address.findById(addressId);
@@ -27,6 +34,9 @@ export const getAddressById = async (req, res, next) => {
     }
 }
 export const getUserAddresses = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const userId = req.params.id;
     try {
         const addresses = await Address.find({user_id: userId});
@@ -37,6 +47,9 @@ export const getUserAddresses = async (req, res, next) => {
     }
 }
 export const addAddress = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const addressData = req.body.address;
     const userId = req.body.userId;
     const newAddress = new Address({
@@ -69,6 +82,9 @@ export const addAddress = async (req, res, next) => {
     }
 }
 export const updateAddress = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const addressId = req.params.id;
     const addressData = req.body
     try {
@@ -84,6 +100,9 @@ export const updateAddress = async (req, res, next) => {
     }
 }
 export const deleteAddress = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const deletedAddres = await Address.findByIdAndDelete(id);

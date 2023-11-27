@@ -2,8 +2,12 @@ import Tag from '../models/mealTagsModel.js'
 import Meal from "../models/mealsModel.js";
 import Diet from "../models/dietsModel.js";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 
 export const getTags = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     try {
         const tags = await Tag.find({});
         res.status(200);
@@ -14,6 +18,9 @@ export const getTags = async (req, res, next) => {
     }
 }
 export const addTag = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const tagData = req.body;
     try {
         const existingTag = await Tag.findOne({name: tagData.name})
@@ -37,6 +44,9 @@ export const addTag = async (req, res, next) => {
 
 }
 export const updateTag = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     const tagData = req.body;
     try {
@@ -52,6 +62,9 @@ export const updateTag = async (req, res, next) => {
 
 }
 export const deleteTag = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try {
         const deletedTag = await Tag.findByIdAndDelete(id);

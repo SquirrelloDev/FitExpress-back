@@ -1,7 +1,11 @@
 import Order from '../models/ordersModel.js';
 import User from '../models/userModel.js';
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 export const getAllOrders = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const page = req.query.page;
     const pageSize = req.query.pageSize;
     try{
@@ -15,6 +19,9 @@ export const getAllOrders = async (req, res,next) => {
 
 }
 export const getUserOrders = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const userId = req.query.userId;
     try{
         const userOrders = await Order.find({user_id: userId}).populate('diet_id').select('-user_id');
@@ -30,6 +37,9 @@ export const getUserOrders = async (req, res,next) => {
 
 }
 export const getOrdersByDiet = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const dietId = req.query.dietId;
     try {
         const dietOrders = await Order.find({diet_id: dietId}).populate('user_id').select('-diet_id');
@@ -45,6 +55,9 @@ export const getOrdersByDiet = async (req, res,next) => {
 
 }
 export const getOrderById = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try{
         const order = await Order.findById(id).populate("diet_id").populate("user_id");
@@ -61,6 +74,9 @@ export const getOrderById = async (req, res,next) => {
 
 }
 export const createOrder = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const orderData = req.body
     const order = new Order({
         diet_id: orderData.dietId,
@@ -84,6 +100,9 @@ export const createOrder = async (req, res,next) => {
 
 }
 export const updateOrder = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     const orderData = req.body;
     try{
@@ -108,6 +127,9 @@ export const updateOrder = async (req, res,next) => {
 
 }
 export const deleteOrder = async (req, res,next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
     try{
         const deletedOrder = await Order.findByIdAndDelete(id);

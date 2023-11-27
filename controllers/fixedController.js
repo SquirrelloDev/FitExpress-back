@@ -1,8 +1,12 @@
 import DayFixed from '../models/fixedModel.js'
 import {parseIntoMidnightISO} from "../utils/dates.js";
 import {ApiError} from "../utils/errors.js";
+import {checkPermissions} from "../utils/auth.js";
 //TODO: Add pagination here
 export const getFixedDays = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const page = req.query.page;
     const pageSize = req.query.pageSize;
     try {
@@ -47,6 +51,9 @@ export const getFixedDays = async (req, res, next) => {
 
 }
 export const getFixedDay = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     try {
         const isoDate = parseIntoMidnightISO(date);
@@ -91,6 +98,9 @@ export const getFixedDay = async (req, res, next) => {
     }
 }
 export const createFixedDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const dayData = req.body;
     const dayFixed = new DayFixed(dayData)
     try {
@@ -103,6 +113,9 @@ export const createFixedDayEntry = async (req, res, next) => {
 
 }
 export const updateFixedDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     try {
         const isoDate = parseIntoMidnightISO(date);
@@ -115,6 +128,9 @@ export const updateFixedDayEntry = async (req, res, next) => {
     }
 }
 export const deleteFixedDayEntry = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const date = req.query.date;
     try {
         const isoDate = parseIntoMidnightISO(date)
