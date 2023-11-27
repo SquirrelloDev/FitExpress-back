@@ -20,6 +20,7 @@ import {reportsRouter} from "./routes/reports.js";
 import {entriesRouter} from "./routes/progressEntries.js";
 import {deliveryRouter} from "./routes/deliverPoints.js";
 import {dailyRouter} from "./routes/dailyOrders.js";
+import {errorMiddleware} from "./middleware/errorMiddleware.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
@@ -64,5 +65,6 @@ app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
 //TODO: enable cronjobs when the time comes
 // setupCronJobs();
-
+//error middleware
+app.use(errorMiddleware)
 app.listen(3001)
