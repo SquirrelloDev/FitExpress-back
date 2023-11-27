@@ -7,18 +7,19 @@ import {
     getFixedDays,
     updateFixedDayEntry
 } from "../controllers/fixedController.js";
+import isAuth from "../middleware/isAuth.js";
 
 const router = express.Router();
 //-----------FLEXI---------------
-router.get('/flexi/', getDays);
-router.get('/flexi/day', getDay);
-router.post('/flexi/', createDayEntry);
-router.put('/flexi/day', updateDayEntry);
-router.delete('/flexi/day', deleteDayEntry);
+router.get('/flexi/', isAuth, getDays);
+router.get('/flexi/day', isAuth, getDay);
+router.post('/flexi/', isAuth, createDayEntry);
+router.put('/flexi/day', isAuth, updateDayEntry);
+router.delete('/flexi/day', isAuth, deleteDayEntry);
 //----------FIXED-----------------
-router.get('/fixed', getFixedDays);
-router.get('/fixed/day', getFixedDay);
-router.post('/fixed', createFixedDayEntry);
-router.put('/fixed/day', updateFixedDayEntry);
-router.delete('/fixed/day', deleteFixedDayEntry)
+router.get('/fixed', isAuth, getFixedDays);
+router.get('/fixed/day', isAuth, getFixedDay);
+router.post('/fixed', isAuth, createFixedDayEntry);
+router.put('/fixed/day', isAuth, updateFixedDayEntry);
+router.delete('/fixed/day', isAuth, deleteFixedDayEntry)
 export {router as dietDaysRouter}

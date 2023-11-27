@@ -6,6 +6,7 @@ import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from 'cors'
 import multer from 'multer'
+import {config} from "dotenv";
 import { usersRouter } from './routes/users.js'
 import {promocodesRouter} from "./routes/promocodes.js";
 import {addressesRouter} from "./routes/addresses.js";
@@ -19,8 +20,11 @@ import {reportsRouter} from "./routes/reports.js";
 import {entriesRouter} from "./routes/progressEntries.js";
 import {deliveryRouter} from "./routes/deliverPoints.js";
 import {dailyRouter} from "./routes/dailyOrders.js";
+import {errorMiddleware} from "./middleware/errorMiddleware.js";
+import {lockAddingOrders} from "./controllers/dailyOrdersController.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+config({ path: './config/.env'});
 const app = express();
 const diskStorage = multer.diskStorage({
     destination: (req,file,cb) => {
@@ -62,4 +66,6 @@ app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
 //TODO: enable cronjobs when the time comes
 // setupCronJobs();
+//error middleware
+app.use(errorMiddleware)
 app.listen(3001)

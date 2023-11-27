@@ -7,12 +7,13 @@ import {
     getPromocodes,
     updatePromoData
 } from "../controllers/promocodesController.js";
+import isAuth from "../middleware/isAuth.js";
 
 const router = express.Router()
-router.get('/', getPromocodes)
-router.get('/:name', getPromocodeByName)
-router.post('/new', createPromocode)
-router.put('/:id', updatePromoData)
-router.put('/', assignPromoToUser)
-router.delete('/:id', deletePromocode)
+router.get('/', isAuth, getPromocodes)
+router.get('/:name', isAuth, getPromocodeByName)
+router.post('/new', isAuth, createPromocode)
+router.put('/:id', isAuth, updatePromoData)
+router.put('/', isAuth, assignPromoToUser)
+router.delete('/:id', isAuth, deletePromocode)
 export {router as promocodesRouter}

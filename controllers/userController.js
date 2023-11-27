@@ -2,36 +2,44 @@ import User from '../models/userModel.js'
 import Address from '../models/addressesModel.js'
 import Order from '../models/ordersModel.js'
 import ProgressEntry from '../models/progressEntryModel.js'
-import crypto from "crypto"
 import bcrypt from "bcrypt"
+import {checkPermissions, signToken} from "../utils/auth.js";
+import {ApiError} from "../utils/errors.js";
 
 export const getAllUsers = async (req, res, next) => {
-    try{
-        const users = await User.find({});
-        console.log(users)
-        if (!users) {
-            res.status(500)
-            return res.json({
-                message: 'Could not find the users'
-            })
-        }
-        res.status(200);
-        res.json(users);
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    catch (e) {
-        
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
+    try {
+        const users = await User.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        if (!users) {
+            return next(ApiError('Could not find the users', 404))
+        }
+        const totalItems = await User.find({}).countDocuments();
+        res.status(200);
+        res.json({
+            users,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        });
+    } catch (e) {
+        next(e);
     }
 }
 export const addNewUser = async (req, res, next) => {
     const userData = req.body;
-    try{
+    try {
         const existingUser = await User.findOne({email: userData.email})
         if (existingUser) {
-            res.status(500);
-            return res.json({
-                message: "user already exists!"
-            })
-
+            return next(ApiError('User already exist!', 409));
         }
         const hashPasswd = await bcrypt.hash(userData.password, 12)
         const user = new User({
@@ -40,18 +48,18 @@ export const addNewUser = async (req, res, next) => {
             birth_date: userData.birth_date,
             password: hashPasswd,
             health_data: userData.healthData,
+            role: process.env.ACCESS_USER
         })
         const result = await user.save();
-        //create document of for the new user of his entries
+        //create document of for the new user and his entries
         const emptyProgressEntry = new ProgressEntry({
             user_id: result._id,
             weight_progress: [],
             water_progress: []
         })
         await emptyProgressEntry.save();
-    }
-    catch (e) {
-        
+    } catch (err) {
+        return next(err);
     }
     res.status(201);
     res.json({
@@ -62,66 +70,70 @@ export const addNewUser = async (req, res, next) => {
 export const logInUser = async (req, res, next) => {
     const email = req.body.email;
     const password = req.body.password;
-    try{
-        const user = await User.findOne({email: email})
+    try {
+        const user = await User.findOne({email: email}).select('+password')
         if (user) {
             const isPasswdMatch = await bcrypt.compare(password, user.password)
             if (isPasswdMatch) {
+                const token = signToken({...user._doc})
                 res.status(200)
                 return res.json({
-                    //return a JWT token
-                    message: 'loggedIn'
+                    message: 'loggedIn',
+                    token
                 })
             }
-            res.status(401);
-            return res.json({
-                message: "Passwords do not match"
-            })
+            return next(ApiError('Passwords do not match', 401))
         }
-        res.status(404);
-        res.json({
-            message: "User does not exist!"
-        })
-    } catch (e) {
+        return next(ApiError('User does not exist!', 404));
 
+    } catch (e) {
+        next(e);
     }
 
+
 }
-export const updateUserData = async (req,res,next) =>{
+export const updateUserData = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
-    console.log(id)
     const userData = req.body;
-    try{
+    try {
         const user = await User.findByIdAndUpdate(id, userData, {returnDocument: "after"})
-        console.log(user)
         res.status(200);
         res.json({
             message: "User updated!"
         })
-    } catch (e){
-
+    } catch (e) {
+        next(e)
     }
 }
-export const updateUserHealthcard = async (req,res,next) => {
+export const updateUserHealthcard = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const healthData = req.body.healthData
-    try{
-        const user = await User.findByIdAndUpdate(req.body._id, { health_data: healthData }, {returnDocument: "after"})
+    try {
+        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData}, {returnDocument: "after"})
         console.log(user)
         res.status(200);
         return res.json({
             message: 'loggedIn'
         })
     } catch (e) {
-
+    next(e)
     }
 
 }
-export const deleteUser = async(req, res, next) =>  {
+export const deleteUser = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
     const id = req.params.id;
-    try{
+    try {
         const userEntry = await User.findByIdAndDelete(id)
-        if(userEntry){
-        //also delete addresses, orders, etc.
+        if (userEntry) {
+            //also delete addresses, orders, etc.
             const deletedAddresses = await Address.deleteMany({user_id: id});
             const deletedOrders = await Order.deleteMany({user_id: id})
             res.status(200);
@@ -129,18 +141,10 @@ export const deleteUser = async(req, res, next) =>  {
                 message: 'User successfully deleted'
             })
         }
-        res.status(404);
-        res.json({
-            message: 'User for deletion not found!'
-        })
+        return next(ApiError('User for deletion not found!', 404))
 
-    }
-    catch (e) {
-        console.error('Something happened ' + e)
-        res.status(500);
-        res.json({
-            message: "Something happened on a server"
-        })
+    } catch (e) {
+        next(e)
     }
 
 }
