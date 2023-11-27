@@ -3,21 +3,34 @@ import getDistanceFromCoords from "../utils/geoDistance.js";
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
-export const getAllPoints = async (req, res) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+export const getAllPoints = async (req, res, next) => {
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const points = await DeliveryPoint.find({});
+        const points = await DeliveryPoint.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        const totalItems = await DeliveryPoint.find({}).countDocuments();
         res.status(200);
-        res.json(points);
+        res.json({
+            points,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        });
 
     } catch (e) {
         next(e)
     }
 }
 export const getPointByCoords = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userLat = req.query.lat;
@@ -41,7 +54,7 @@ export const getPointByCoords = async (req, res, next) => {
 
 }
 export const getPointById = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id
@@ -58,7 +71,7 @@ export const getPointById = async (req, res, next) => {
     }
 }
 export const addPoint = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointData = req.body
@@ -74,7 +87,7 @@ export const addPoint = async (req, res, next) => {
 }
 //admin only
 export const updatePoint = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id
@@ -93,7 +106,7 @@ export const updatePoint = async (req, res, next) => {
 }
 //admin only
 export const deletePoint = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id;

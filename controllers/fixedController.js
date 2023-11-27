@@ -2,13 +2,12 @@ import DayFixed from '../models/fixedModel.js'
 import {parseIntoMidnightISO} from "../utils/dates.js";
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
-//TODO: Add pagination here
 export const getFixedDays = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
         const fixedDays = await DayFixed.find({}).skip((page - 1) * pageSize).limit(pageSize)
             .populate({
@@ -41,10 +40,21 @@ export const getFixedDays = async (req, res, next) => {
                 populate: {
                     path: 'meals.supper',
                 }
-            })
+            });
+        const totalItems = await DayFixed.find({}).countDocuments();
 
         res.status(200)
-        res.json(fixedDays);
+        res.json({
+            fixedDays,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        });
     } catch (e) {
         next(e)
     }

@@ -6,19 +6,32 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getMeals = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const meals = await Meal.find({}).populate('exclusions').populate('tags_id')
+        const meals = await Meal.find({}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize)
         if (meals) {
             const mealsImage = meals.map((meal) => {
                 let mealPath = path.join('public', 'images', meal.img_path);
                 const data = fs.readFileSync(mealPath, {encoding: 'base64'})
                 return {...meal._doc, imageBuffer: data}
             })
+            const totalItems = await Meal.find({}).countDocuments()
             res.status(200)
-            res.json(mealsImage);
+            res.json({
+                mealsImage,
+                paginationInfo: {
+                    totalItems,
+                    hasNextPage: pageSize * page < totalItems,
+                    haPreviousPage: page > 1,
+                    nextPage: page + 1,
+                    previousPage: page - 1,
+                    lastPage: Math.ceil(totalItems / pageSize)
+                }
+            });
         }
     } catch (e) {
         next(e);
@@ -26,7 +39,7 @@ export const getMeals = async (req, res, next) => {
 
 }
 export const getMealById = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -43,7 +56,7 @@ export const getMealById = async (req, res, next) => {
 
 }
 export const createMeal = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     try {
@@ -73,7 +86,7 @@ export const createMeal = async (req, res, next) => {
 
 }
 export const updateMeal = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const file = req.file
@@ -109,7 +122,7 @@ export const updateMeal = async (req, res, next) => {
 
 }
 export const deleteMeal = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id

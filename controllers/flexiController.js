@@ -1,13 +1,12 @@
 import DayFlexi from '../models/flexiModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
-//TODO: Add pagination here
 export const getDays = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
         const flexiDays = await DayFlexi.find({}).skip((page - 1) * pageSize).limit(pageSize)
             .populate('morning_meals')
@@ -15,15 +14,26 @@ export const getDays = async (req, res, next) => {
             .populate('dinner_meals')
             .populate('teatime_meals')
             .populate('supper_meals');
+        const totalItems = await DayFlexi.find({}).countDocuments()
         res.status(200)
-        res.json(flexiDays);
+        res.json({
+            flexiDays,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        });
     } catch (e) {
         next(e);
     }
 
 }
 export const getDay = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;
@@ -40,11 +50,10 @@ export const getDay = async (req, res, next) => {
     }
 }
 export const createDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
-    //TODO: check if there is no enrty with the same date
     try {
         const dayFlexi = new DayFlexi({
             date: dayData.date,
@@ -62,7 +71,7 @@ export const createDayEntry = async (req, res, next) => {
     res.json({message: 'Day added!'})
 }
 export const updateDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;
@@ -76,7 +85,7 @@ export const updateDayEntry = async (req, res, next) => {
     }
 }
 export const deleteDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;

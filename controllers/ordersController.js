@@ -6,12 +6,23 @@ export const getAllOrders = async (req, res,next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try{
         const orders = await Order.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('diet_id').populate('user_id');
+        const totalItems = await Order.find({}).countDocuments()
         res.status(200);
-        res.json(orders)
+        res.json({
+            orders,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        })
     }
     catch (e) {
         next(e)

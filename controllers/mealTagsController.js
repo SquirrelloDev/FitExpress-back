@@ -5,20 +5,33 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getTags = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const tags = await Tag.find({});
+        const tags = await Tag.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        const totalItems = await Tag.find({}).countDocuments();
         res.status(200);
-        res.json(tags)
+        res.json({
+            tags,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        })
 
     } catch (e) {
         next(e);
     }
 }
 export const addTag = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const tagData = req.body;
@@ -44,7 +57,7 @@ export const addTag = async (req, res, next) => {
 
 }
 export const updateTag = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -62,7 +75,7 @@ export const updateTag = async (req, res, next) => {
 
 }
 export const deleteTag = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;

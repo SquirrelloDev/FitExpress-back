@@ -6,12 +6,23 @@ export const getAllReports = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
         const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        const totalItems = await Report.find({}).countDocuments();
         res.status(200);
-        res.json(reports);
+        res.json({
+            reports,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        });
     } catch (e) {
         next(e);
     }
@@ -39,15 +50,26 @@ export const getUserReports = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.query.userId;
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
         const userReports = await Report.find({user_id: userId}).skip((page - 1) * pageSize).limit(pageSize).populate("order_id");
         if (!userReports) {
             return next(ApiError("User haven't create any report", 404))
         }
+        const totalItems = await Report.find({user_id: userId}).countDocuments()
         res.status(200);
-        res.json(userReports)
+        res.json({
+            userReports,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        })
     } catch (e) {
         next(e)
     }
@@ -121,7 +143,6 @@ export const updateReportStatus = async (req, res, next) => {
     }
 
 }
-//TODO: Add token
 export const deleteReport = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))

@@ -5,20 +5,33 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getAddresses = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const addresses = await Address.find({})
+        const addresses = await Address.find({}).skip((page - 1) * pageSize).limit(pageSize)
+        const totalItems = await Address.find({}).countDocuments();
         res.status(200);
-        res.json(addresses)
+        res.json({
+            addresses,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        })
 
     } catch (e) {
         next(e)
     }
 }
 export const getAddressById = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const addressId = req.params.id;
@@ -34,20 +47,33 @@ export const getAddressById = async (req, res, next) => {
     }
 }
 export const getUserAddresses = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.params.id;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const addresses = await Address.find({user_id: userId});
+        const addresses = await Address.find({user_id: userId}).skip((page - 1) * pageSize).limit(pageSize);
+        const totalItems = await Address.find({user_id: userId}).countDocuments();
         res.status(200);
-        res.json(addresses)
+        res.json({
+            addresses,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        })
     } catch (e) {
         next(e)
     }
 }
 export const addAddress = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const addressData = req.body.address;
@@ -82,7 +108,7 @@ export const addAddress = async (req, res, next) => {
     }
 }
 export const updateAddress = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const addressId = req.params.id;
@@ -100,7 +126,7 @@ export const updateAddress = async (req, res, next) => {
     }
 }
 export const deleteAddress = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;

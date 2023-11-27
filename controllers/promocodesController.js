@@ -7,13 +7,26 @@ export const getPromocodes = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const promocodes = await Promocode.find({});
+        const promocodes = await Promocode.find({}).skip((page - 1) * pageSize).limit(pageSize);
         if (!promocodes) {
             return next(ApiError('could not find promocodes', 404))
         }
+        const totalItems = await Promocode.find({}).countDocuments();
         res.status(200);
-        res.json(promocodes)
+        res.json({
+            promocodes,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        })
     } catch (e) {
         next(e);
     }

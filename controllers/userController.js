@@ -10,13 +10,26 @@ export const getAllUsers = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
-        const users = await User.find({});
+        const users = await User.find({}).skip((page - 1) * pageSize).limit(pageSize);
         if (!users) {
             return next(ApiError('Could not find the users', 404))
         }
+        const totalItems = await User.find({}).countDocuments();
         res.status(200);
-        res.json(users);
+        res.json({
+            users,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems/pageSize)
+            }
+        });
     } catch (e) {
         next(e);
     }

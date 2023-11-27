@@ -3,22 +3,33 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getAllProgress = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const page = req.query.page;
-    const pageSize = req.query.pageSize;
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     try {
         const entries = await ProgessEntry.find({}).skip((page - 1) * pageSize).limit(pageSize).populate("user_id");
+        const totalItems = await ProgessEntry.find({}).countDocuments()
         res.status(200);
-        res.json(entries);
+        res.json({
+            entries,
+            paginationInfo: {
+                totalItems,
+                hasNextPage: pageSize * page < totalItems,
+                haPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / pageSize)
+            }
+        });
     } catch (e) {
         next(e);
     }
 
 }
 export const getProgressByUser = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.query.userId;
@@ -35,7 +46,7 @@ export const getProgressByUser = async (req, res, next) => {
     }
 }
 export const addEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const entryData = req.body;
@@ -64,7 +75,7 @@ export const addEntry = async (req, res, next) => {
 
 }
 export const updateEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = new Date(req.query.date);
@@ -97,7 +108,7 @@ export const updateEntry = async (req, res, next) => {
 
 }
 export const deleteEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.query.userId;
