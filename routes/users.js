@@ -5,7 +5,7 @@ import {
     addNewUser,
     logInUser,
     updateUserData,
-    updateUserHealthcard, deleteUser
+    updateUserHealthcard, deleteUser, changePassword, requestChangePassword
 } from "../controllers/userController.js";
 import isAuth from "../middleware/isAuth.js";
 const router = express.Router();
@@ -13,6 +13,8 @@ const router = express.Router();
 router.get('/', isAuth, getAllUsers);
 router.post('/', addNewUser);
 router.post('/login', logInUser);
+router.post('/password-request', requestChangePassword)
+router.put('/password', changePassword);
 router.put("/:id", isAuth, updateUserData);
 router.patch('/hcard', isAuth, updateUserHealthcard);
 router.delete('/:id', isAuth, deleteUser);

@@ -3,11 +3,13 @@ import Address from '../models/addressesModel.js'
 import Order from '../models/ordersModel.js'
 import ProgressEntry from '../models/progressEntryModel.js'
 import bcrypt from "bcrypt"
+import jwt from 'jsonwebtoken'
 import {checkPermissions, signToken} from "../utils/auth.js";
 import {ApiError} from "../utils/errors.js";
+import {sendRequestPasswordMail} from "../utils/mails-service.js";
 
 export const getAllUsers = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -27,7 +29,7 @@ export const getAllUsers = async (req, res, next) => {
                 haPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
-                lastPage: Math.ceil(totalItems/pageSize)
+                lastPage: Math.ceil(totalItems / pageSize)
             }
         });
     } catch (e) {
@@ -41,7 +43,7 @@ export const addNewUser = async (req, res, next) => {
         if (existingUser) {
             return next(ApiError('User already exist!', 409));
         }
-        const hashPasswd = await bcrypt.hash(userData.password, 12)
+        const hashPasswd = await bcrypt.hash(userData.password, Number(process.env.BCRYPT_SALT))
         const user = new User({
             name: userData.name,
             email: userData.email,
@@ -93,7 +95,7 @@ export const logInUser = async (req, res, next) => {
 
 }
 export const updateUserData = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -109,7 +111,7 @@ export const updateUserData = async (req, res, next) => {
     }
 }
 export const updateUserHealthcard = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const healthData = req.body.healthData
@@ -121,12 +123,68 @@ export const updateUserHealthcard = async (req, res, next) => {
             message: 'loggedIn'
         })
     } catch (e) {
-    next(e)
+        next(e)
     }
 
 }
+export const requestChangePassword = async (req, res, next) => {
+    const reqData = req.body;
+    //Firstly, check the body
+    //-----------If the body has mail only---------------
+    //check if user with that email exist
+    try {
+        const user = await User.findOne({email: reqData.email});
+        if (!user) {
+            return next(ApiError('User with provided email does not exist', 404))
+        }
+        //if exists, then generate a jwt token and send mail to reset password page with query parameter of that token, e.g. http://fitexpress.com/password-reset?token=lsd839453ld$dfn
+        const token = signToken({userId: user._id}, process.env.PASSWDSECRET, {expiresIn: '30m'});
+        const userWithToken = await User.findByIdAndUpdate(user._id, {"resetToken": token});
+        //send mail
+        await sendRequestPasswordMail(user.email, token);
+        res.status(201);
+        res.json({message: 'Email has been sent with reset link', token})
+    } catch (e) {
+        next(e);
+    }
+}
+export const changePassword = async (req, res, next) => {
+    //Firstly, verify the token
+    //IF token isn't suffiecient enough (expired, malformed, etc.), return next(500)
+    //If token is suffiecient,
+    const reqToken = req.query.token;
+    const newPasswd = req.body.password;
+    let decodedToken = '';
+    try {
+        decodedToken = jwt.verify(reqToken, process.env.PASSWDSECRET)
+
+    } catch (e) {
+        e.statusCode = 500;
+        return next(e)
+    }
+    const userId = decodedToken.userId;
+    try {
+    const user = await User.findById(userId).select("+password");
+    if(!user){
+        return next(ApiError('User does not exist!', 404));
+    }
+    //check if passwords are the same for some reason
+    const passwdMatch = await bcrypt.compare(newPasswd, user.password);
+    if(passwdMatch){
+        return next(ApiError('New password should be different from current password', 409))
+    }
+    const hashedNewPasswd = await bcrypt.hash(newPasswd, Number(process.env.BCRYPT_SALT));
+    const updatedPasswdUser = await User.findByIdAndUpdate(userId, {password: hashedNewPasswd, resetToken: ""});
+    res.status(200);
+    res.json({message: 'Password changed!'});
+
+    }
+    catch (e) {
+        next(e);
+    }
+}
 export const deleteUser = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
