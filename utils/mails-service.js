@@ -1,16 +1,33 @@
 import nodemailer from 'nodemailer';
 import Transport from "nodemailer-brevo-transport";
 
-const sendTestMail = async () => {
+ export const sendTestMail = async () => {
     const transporter = nodemailer.createTransport(new Transport({
-        apiKey: "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"
+        apiKey: process.env.MAIL_API_KEY
     }))
     const test = await transporter.sendMail({
-        to: 'olejnike2000@gmail.com',
-        from: 'support@fitexperss.com',
-        subject: 'Zmiana',
-        html: '<h1>lorem ipsum dolor sit amet</h1> '
+        to: 'johndoe@gmail.com',
+        from: 'fitexpress@gmail.com',
+        subject: 'Dziękujemy za zakupy',
+        html: '<h1>Oto twoja fakturka</h1> '
     });
     console.log("Recieved ", test)
 }
-export default sendTestMail;
+export const sendRequestPasswordMail = async (email,token) => {
+    const transporter = nodemailer.createTransport(new Transport({
+        apiKey: process.env.MAIL_API_KEY
+    }))
+    const mail = await transporter.sendMail({
+        to: email,
+        from: 'fitexpress@sendinblue.com',
+        subject: 'Test zmiana hasła',
+        html:
+            `
+            <h1>Zmiana hasła</h1>
+            <p>Zauważyliśmy, że chcesz zmienić hasło do swojego konta FitExpress</p>
+            <h3>Użyj linku poniżej, by zresetować swoje hasło</h3>
+            <a href="https://localhost:3001/resetPassword?token=${token}">Zmień hasło</a>
+            `
+    })
+    console.log('Recieved', mail)
+}
