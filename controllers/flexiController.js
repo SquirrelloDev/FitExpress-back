@@ -21,7 +21,7 @@ export const getDays = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPrevoiusPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -39,6 +39,23 @@ export const getDay = async (req, res, next) => {
     const date = req.query.date;
     try {
         const flexiDay = await DayFlexi.findOne({date: date})
+        if (!flexiDay) {
+            return next(ApiError("Day not found", 404))
+        }
+        res.status(200);
+        res.json(flexiDay);
+
+    } catch (e) {
+        next(e);
+    }
+}
+export const getDayById = async (req, res, next) => {
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const id = req.params.id
+    try {
+        const flexiDay = await DayFlexi.findById(id)
         if (!flexiDay) {
             return next(ApiError("Day not found", 404))
         }
@@ -74,12 +91,12 @@ export const updateDayEntry = async (req, res, next) => {
     if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
+    const id = req.params.id;
     const dayData = req.body
     try {
-        const flexiDay = await DayFlexi.updateOne({date: date}, dayData)
+        const flexiDay = await DayFlexi.findByIdAndUpdate(id, dayData)
         res.status(200);
-        res.json({message: `Day ${date} updated`})
+        res.json({message: 'Day updated'})
     } catch (e) {
         next(e);
     }
@@ -88,11 +105,11 @@ export const deleteDayEntry = async (req, res, next) => {
     if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
+    const id = req.params.id;
     try {
-        const deletedDay = await DayFlexi.findOneAndDelete({date: date});
+        const deletedDay = await DayFlexi.findByIdAndDelete(id);
         if (!deletedDay) {
-            return next(ApiError(`Assignment for the date: ${date} does not exist!`, 404))
+            return next(ApiError(`Assignment for the date does not exist!`, 404))
         }
         res.status(200);
         res.json({message: 'Day deleted! Make sure to add assignment for this day as soon as possible!'})

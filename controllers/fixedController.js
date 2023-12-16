@@ -49,7 +49,7 @@ export const getFixedDays = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPrevoiusPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -68,6 +68,52 @@ export const getFixedDay = async (req, res, next) => {
     try {
         const isoDate = parseIntoMidnightISO(date);
         const fixedDay = await DayFixed.findOne({date: isoDate}).populate({
+            path: 'diets',
+            populate: {
+                path: 'diet_id'
+            }
+        }).populate({
+            path: 'diets',
+            populate: {
+                path: 'meals.morning',
+            }
+        }).populate({
+            path: 'diets',
+            populate: {
+                path: 'meals.lunch',
+            }
+        }).populate({
+            path: 'diets',
+            populate: {
+                path: 'meals.dinner',
+            }
+        }).populate({
+            path: 'diets',
+            populate: {
+                path: 'meals.teatime',
+            }
+        }).populate({
+            path: 'diets',
+            populate: {
+                path: 'meals.supper',
+            }
+        })
+        if (!fixedDay) {
+            return next(ApiError("Day not found", 404))
+        }
+        res.status(200);
+        res.json(fixedDay);
+    } catch (e) {
+        next(e);
+    }
+}
+export const getFixedDayById = async (req, res, next) => {
+    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const id = req.params.id;
+    try {
+        const fixedDay = await DayFixed.findById(id).populate({
             path: 'diets',
             populate: {
                 path: 'diet_id'
@@ -126,11 +172,10 @@ export const updateFixedDayEntry = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
+    const id = req.params.date;
     try {
-        const isoDate = parseIntoMidnightISO(date);
         const dayData = req.body
-        const fixedDay = await DayFixed.updateOne({date: isoDate}, dayData)
+        const fixedDay = await DayFixed.findByIdAndUpdate(id, dayData)
         res.status(200);
         res.json({message: `Day ${date} updated`})
     } catch (e) {
@@ -141,10 +186,9 @@ export const deleteFixedDayEntry = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
+    const id = req.params.date;
     try {
-        const isoDate = parseIntoMidnightISO(date)
-        const deletedDay = await DayFixed.findOneAndDelete({date: isoDate});
+        const deletedDay = await DayFixed.findByIdAndDelete(id);
         if (!deletedDay) {
             return next(ApiError(`Assignment for the date: ${date} does not exist!`, 404))
         }
