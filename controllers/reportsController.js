@@ -9,7 +9,7 @@ export const getAllReports = async (req, res, next) => {
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try {
-        const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('user_id');
         const totalItems = await Report.find({}).countDocuments();
         res.status(200);
         res.json({
@@ -17,7 +17,7 @@ export const getAllReports = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -34,7 +34,7 @@ export const getReportById = async (req, res, next) => {
     }
     const id = req.params.id;
     try {
-        const report = await Report.findById(id);
+        const report = await Report.findById(id).populate('user_id');
         if (!report) {
             return next(ApiError("Report does not exist!", 404))
         }
@@ -64,7 +64,7 @@ export const getUserReports = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)

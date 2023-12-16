@@ -19,7 +19,9 @@ export const getDiets = async (req, res, next) => {
                 return {...diet._doc, imageBuffer: data}
             })
             res.status(200);
-            res.json(dietsImage)
+            res.json({
+                diets: dietsImage
+            })
         }
 
     } catch (e) {

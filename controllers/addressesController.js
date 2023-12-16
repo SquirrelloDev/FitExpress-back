@@ -11,7 +11,7 @@ export const getAddresses = async (req, res, next) => {
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try {
-        const addresses = await Address.find({}).skip((page - 1) * pageSize).limit(pageSize)
+        const addresses = await Address.find({}).populate('user_id').skip((page - 1) * pageSize).limit(pageSize)
         const totalItems = await Address.find({}).countDocuments();
         res.status(200);
         res.json({
@@ -19,7 +19,7 @@ export const getAddresses = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -36,7 +36,7 @@ export const getAddressById = async (req, res, next) => {
     }
     const addressId = req.params.id;
     try {
-        const address = await Address.findById(addressId);
+        const address = await Address.findById(addressId).populate("user_id");
         if (!address) {
             return next(ApiError('Address not found', 404))
         }
@@ -62,7 +62,7 @@ export const getUserAddresses = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)

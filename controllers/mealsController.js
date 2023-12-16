@@ -15,18 +15,18 @@ export const getMeals = async (req, res, next) => {
         const meals = await Meal.find({}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize)
         if (meals) {
             const mealsImage = meals.map((meal) => {
-                let mealPath = path.join('public', 'images', meal.img_path);
+                let mealPath = path.join('public', 'images', meal.img.img_path);
                 const data = fs.readFileSync(mealPath, {encoding: 'base64'})
                 return {...meal._doc, imageBuffer: data}
             })
             const totalItems = await Meal.find({}).countDocuments()
             res.status(200)
             res.json({
-                mealsImage,
+                meals: mealsImage,
                 paginationInfo: {
                     totalItems,
                     hasNextPage: pageSize * page < totalItems,
-                    haPreviousPage: page > 1,
+                    hasPreviousPage: page > 1,
                     nextPage: page + 1,
                     previousPage: page - 1,
                     lastPage: Math.ceil(totalItems / pageSize)
@@ -44,10 +44,11 @@ export const getMealById = async (req, res, next) => {
     }
     const id = req.params.id;
     try {
-        const meal = await Meal.findById(id);
+        const meal = await Meal.findById(id).populate('exclusions').populate('tags_id');
         if (!meal) {
             return next(ApiError('Meal does not exist', 404))
         }
+
         res.status(200)
         res.json(meal)
     } catch (e) {
