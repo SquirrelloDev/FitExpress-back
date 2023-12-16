@@ -26,7 +26,7 @@ export const getAllUsers = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPrevoiusPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -35,6 +35,25 @@ export const getAllUsers = async (req, res, next) => {
     } catch (e) {
         next(e);
     }
+}
+export const getUser = async (req,res,next) => {
+    const id = req.params.id
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    try{
+        const user = await User.findById(id);
+        if(!user){
+            return next(ApiError('User does not exist!', 404))
+        }
+        res.status(200)
+        res.json(user);
+    }
+    catch (e) {
+        next(e)
+    }
+
+
 }
 export const addNewUser = async (req, res, next) => {
     const userData = req.body;
@@ -81,6 +100,9 @@ export const logInUser = async (req, res, next) => {
                 res.status(200)
                 return res.json({
                     message: 'loggedIn',
+                    id: user._id,
+                    name: user.name,
+                    role: user.role,
                     token
                 })
             }
@@ -117,7 +139,6 @@ export const updateUserHealthcard = async (req, res, next) => {
     const healthData = req.body.healthData
     try {
         const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData}, {returnDocument: "after"})
-        console.log(user)
         res.status(200);
         return res.json({
             message: 'loggedIn'
