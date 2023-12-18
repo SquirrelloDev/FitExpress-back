@@ -1,6 +1,7 @@
 import DayFlexi from '../models/flexiModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+
 export const getDays = async (req, res, next) => {
     if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
@@ -55,7 +56,11 @@ export const getDayById = async (req, res, next) => {
     }
     const id = req.params.id
     try {
-        const flexiDay = await DayFlexi.findById(id)
+        const flexiDay = await DayFlexi.findById(id).populate('morning_meals')
+            .populate('lunch_meals')
+            .populate('dinner_meals')
+            .populate('teatime_meals')
+            .populate('supper_meals')
         if (!flexiDay) {
             return next(ApiError("Day not found", 404))
         }

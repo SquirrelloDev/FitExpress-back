@@ -177,7 +177,7 @@ export const updateFixedDayEntry = async (req, res, next) => {
         const dayData = req.body
         const fixedDay = await DayFixed.findByIdAndUpdate(id, dayData)
         res.status(200);
-        res.json({message: `Day ${date} updated`})
+        res.json({message: `Day updated`})
     } catch (e) {
         next(e)
     }
@@ -186,11 +186,11 @@ export const deleteFixedDayEntry = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const id = req.params.date;
+    const id = req.params.id;
     try {
         const deletedDay = await DayFixed.findByIdAndDelete(id);
         if (!deletedDay) {
-            return next(ApiError(`Assignment for the date: ${date} does not exist!`, 404))
+            return next(ApiError(`Assignment for the date does not exist!`, 404))
         }
         res.status(200);
         res.json({message: 'Day deleted! Make sure to add assignment for this day as soon as possible!'})
