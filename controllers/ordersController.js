@@ -9,7 +9,7 @@ export const getAllOrders = async (req, res,next) => {
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try{
-        const orders = await Order.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('diet_id').populate('user_id');
+        const orders = await Order.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('diet_id').populate('user_id').populate('address_id');
         const totalItems = await Order.find({}).countDocuments()
         res.status(200);
         res.json({
@@ -35,7 +35,7 @@ export const getUserOrders = async (req, res,next) => {
     }
     const userId = req.query.userId;
     try{
-        const userOrders = await Order.find({user_id: userId}).populate('diet_id').select('-user_id');
+        const userOrders = await Order.find({user_id: userId}).populate('diet_id').populate('address_id').select('-user_id');
         if (!userOrders) {
             return next(ApiError("User with a given id doesn't have any order"), 404)
         }
@@ -53,7 +53,7 @@ export const getOrdersByDiet = async (req, res,next) => {
     }
     const dietId = req.query.dietId;
     try {
-        const dietOrders = await Order.find({diet_id: dietId}).populate('user_id').select('-diet_id');
+        const dietOrders = await Order.find({diet_id: dietId}).populate('user_id').populate('address_id').select('-diet_id');
         if (!dietOrders) {
             return next(ApiError("There are no orders for the given diet", 404))
         }
@@ -71,7 +71,7 @@ export const getOrderById = async (req, res,next) => {
     }
     const id = req.params.id;
     try{
-        const order = await Order.findById(id).populate("diet_id").populate("user_id");
+        const order = await Order.findById(id).populate("diet_id").populate('address_id').populate("user_id");
         if (!order) {
             return next(ApiError("Order does not exist!", 404))
         }
@@ -93,6 +93,7 @@ export const createOrder = async (req, res,next) => {
         diet_id: orderData.dietId,
         user_id: orderData.userId,
         price: orderData.price,
+        address_id: orderData.addressId,
         sub_date: orderData.subDate,
         with_weekends: orderData.withWeekends,
         calories: orderData.calories,
@@ -121,6 +122,7 @@ export const updateOrder = async (req, res,next) => {
             diet_id: orderData.dietId,
             user_id: orderData.userId,
             price: orderData.price,
+            address_id: orderData.addressId,
             sub_date: orderData.subDate,
             with_weekends: orderData.withWeekends,
             calories: orderData.calories,

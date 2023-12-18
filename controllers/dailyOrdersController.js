@@ -42,7 +42,39 @@ export const getDailyOrderByDate = async (req, res, next) => {
     }
     const date = req.query.date
     try {
-        const currentDailyDoc = await DailyOrder.findOne({date: date});
+        const currentDailyDoc = await DailyOrder.findOne({date: date}).populate({
+            path: 'orders',
+            populate: {
+                path:'user_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'diet_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'order_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'selected_meals'
+            }
+        })
+            .populate({
+            path: 'orders',
+            populate: {
+                path: 'order_id',
+                populate: {
+                    path: 'address_id'
+                }
+            }
+        });
         if (!currentDailyDoc) {
             return next(ApiError('Day not found! Report this issue to the administrator immediately', 404))
         }
