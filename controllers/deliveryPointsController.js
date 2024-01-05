@@ -93,7 +93,7 @@ export const updatePoint = async (req, res, next) => {
     const pointId = req.params.id
     const pointData = req.body;
     try {
-        const updatedPoint = DeliveryPoint.findByIdAndUpdate(pointId, pointData)
+        const updatedPoint = await DeliveryPoint.findByIdAndUpdate(pointId, pointData)
         if (!updatedPoint) {
             return next(ApiError('Delivery point does not exist!', 404))
         }

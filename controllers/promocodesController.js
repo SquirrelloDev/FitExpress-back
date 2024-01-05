@@ -32,6 +32,17 @@ export const getPromocodes = async (req, res, next) => {
     }
 
 }
+export const getPromocodeById = async (req,res,next) => {
+    const id = req.params.id
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const promocode = await Promocode.findById(id);
+    if(!promocode){
+        return next(ApiError('Promocode does not exist!', 404))
+    }
+    res.status(200).json(promocode);
+}
 export const getPromocodeByName = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
