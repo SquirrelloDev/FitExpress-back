@@ -30,6 +30,17 @@ export const getTags = async (req, res, next) => {
         next(e);
     }
 }
+export const getTag = async (req,res,next) => {
+    const id = req.params.id
+    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const tag = await Tag.findById(id);
+    if(!tag){
+        return next(ApiError('Tag does not exist!', 404))
+    }
+    res.status(200).json(tag);
+}
 export const addTag = async (req, res, next) => {
     if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
@@ -49,7 +60,7 @@ export const addTag = async (req, res, next) => {
         if (!createdTag) {
             return next(ApiError('Error while creating a tag'))
         }
-        res.status(200);
+        res.status(201);
         res.json({message: 'New tag added'})
     } catch (e) {
         next(e);
