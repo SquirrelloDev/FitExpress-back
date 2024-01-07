@@ -36,17 +36,19 @@ export const getPointByCoords = async (req, res, next) => {
     const userLat = req.query.lat;
     const userLng = req.query.lng;
     let inRange = false;
+    const allowedPoints = [];
     try {
         const allPoints = await DeliveryPoint.find({});
         for (const point of allPoints) {
             const distance = getDistanceFromCoords(userLat, userLng, point.lat, point.lng);
             if (distance <= point.radiusKM) {
+                allowedPoints.push(point._id);
                 inRange = true;
                 break;
             }
         }
         res.status(200);
-        res.json({inRange: inRange})
+        res.json({inRange: inRange, allowedPoints})
 
     } catch (e) {
         next(e)

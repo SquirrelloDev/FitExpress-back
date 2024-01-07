@@ -11,7 +11,7 @@ export const getAddresses = async (req, res, next) => {
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try {
-        const addresses = await Address.find({}).populate('user_id').skip((page - 1) * pageSize).limit(pageSize)
+        const addresses = await Address.find({}).populate('user_id').populate('linked_points').skip((page - 1) * pageSize).limit(pageSize)
         const totalItems = await Address.find({}).countDocuments();
         res.status(200);
         res.json({
@@ -36,7 +36,7 @@ export const getAddressById = async (req, res, next) => {
     }
     const addressId = req.params.id;
     try {
-        const address = await Address.findById(addressId).populate("user_id");
+        const address = await Address.findById(addressId).populate("user_id").populate('linked_points');
         if (!address) {
             return next(ApiError('Address not found', 404))
         }
@@ -76,8 +76,10 @@ export const addAddress = async (req, res, next) => {
     if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+
     const addressData = req.body.address;
     const userId = req.body.userId;
+    console.log(userId)
     const newAddress = new Address({
         street: addressData.street,
         city: addressData.city,
@@ -88,11 +90,13 @@ export const addAddress = async (req, res, next) => {
         extra_info: addressData.extraInfo,
         is_weekend: addressData.isWeekend,
         is_default: addressData.isDefault,
+        linked_points: addressData.linked_points,
         user_id: userId
     });
     try {
         const returnAddress = await newAddress.save()
         const user = await User.findById(userId).select('addresses');
+        console.log(user)
         const userAddresses = user.addresses
         const newAddresses = [...userAddresses, returnAddress._id]
         await User.updateOne({_id: userId}, {addresses: newAddresses})
@@ -112,7 +116,8 @@ export const updateAddress = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const addressId = req.params.id;
-    const addressData = req.body
+    const addressData = { ...req.body.address, userId: req.body.userId }
+    console.log(addressData)
     try {
         const updatedAddress = await Address.findByIdAndUpdate(addressId, addressData, {returnDocument: "after"})
         res.status(200)
