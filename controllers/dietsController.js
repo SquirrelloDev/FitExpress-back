@@ -4,6 +4,7 @@ import path from "path";
 import crypto from "crypto";
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import Meal from "../models/mealsModel.js";
 
 export const getDiets = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
@@ -14,6 +15,9 @@ export const getDiets = async (req, res, next) => {
         const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id');
         if (diets) {
             const dietsImage = diets.map((diet) => {
+                if(diet.img.img_path === ''){
+                    return {...diet._doc, imageBuffer: null}
+                }
                 let dietPath = path.join('public', 'images', diet.img.img_path);
                 const data = fs.readFileSync(dietPath, {encoding: 'base64'})
                 return {...diet._doc, imageBuffer: data}
@@ -33,13 +37,16 @@ export const getDiet = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
+    let imgData = null;
     try {
         const diet = await Diet.findById(id).populate('exclusions').populate('tags_id');
         if (!diet) {
             return next(ApiError('Diet does not exist!', 404))
         }
         const dietImgPath = path.join('public', 'images', diet.img.img_path)
-        const imgData = fs.readFileSync(dietImgPath, {encoding: 'base64'});
+        if(!diet.img.img_path === ''){
+         imgData = fs.readFileSync(dietImgPath, {encoding: 'base64'});
+        }
         res.status(200)
         res.json({...diet._doc, imageBuffer: imgData});
 
@@ -52,17 +59,21 @@ export const createDiet = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const file = req.file;
+    let imgObj = {img_path: '', uri: ''};
     try {
         const dietData = JSON.parse(req.body.data)
         const existingDiet = await Diet.findOne({name: dietData.name});
         if (existingDiet) {
             return next(ApiError('Diet already exist!', 409))
         }
+        if(file){
         const fileBytes = fs.readFileSync(file.path);
-        const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
-        const imgObj = {
+        const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex');
+         imgObj = {
             img_path: file.originalname,
             uri: fileUri
+        }
+
         }
         const newDiet = new Diet({
             ...dietData,
@@ -85,14 +96,19 @@ export const updateDiet = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
+    let fileObj = {img_path: '', uri: ''}
+    let fileUri = ''
     const file = req.file;
     try {
         const dietData = JSON.parse(req.body.data);
+        if(file){
         const fileBytes = fs.readFileSync(file.path);
-        const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
-        const fileObj = {
+        fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
+            fileObj = {
             img_path: file.originalname,
             uri: fileUri
+        }
+
         }
 
         const diet = await Diet.findByIdAndUpdate(id, {
@@ -105,11 +121,17 @@ export const updateDiet = async (req, res, next) => {
         //compare image uris
         if (fileUri !== diet.img.uri) {
             const dietPath = path.join('public', 'images', diet.img.img_path)
-            fs.unlink(dietPath, (err) => {
-                if (err) {
-                    return next(err);
+            if(diet.img.img_path !== ''){
+                const mealsWithSameImage = await Meal.find({"img.img_path": diet.img.img_path})
+                const dietsWithSameImage = await Diet.find({"img.img_path": diet.img.img_path})
+                if(mealsWithSameImage.length === 0 && dietsWithSameImage.length === 0){
+                    fs.unlink(dietPath, (err) => {
+                        if (err) {
+                            return next(err);
+                        }
+                    })
                 }
-            })
+            }
         }
         res.status(200);
         res.json({message: 'Diet updated!'})
@@ -132,11 +154,17 @@ export const deleteDiet = async (req, res, next) => {
         }
         const mealPath = path.join('public', 'images', deletedDiet.img.img_path)
         console.log(mealPath)
-        fs.unlink(mealPath, (err) => {
-            if (err) {
-                throw (err)
+        if(deletedDiet.img.img_path !== ''){
+            const mealsWithSameImage = await Meal.find({"img.img_path": deletedDiet.img.img_path})
+            const dietsWithSameImage = await Diet.find({"img.img_path": deletedDiet.img.img_path})
+            if(mealsWithSameImage.length === 0 && dietsWithSameImage.length === 0){
+                fs.unlink(mealPath, (err) => {
+                    if (err) {
+                        return next(err);
+                    }
+                })
             }
-        })
+        }
         res.status(200);
         res.json({message: 'diet deleted!'})
     } catch (e) {

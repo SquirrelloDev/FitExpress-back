@@ -1,4 +1,5 @@
 import Meal from '../models/mealsModel.js'
+import Diet from '../models/dietsModel.js'
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
@@ -105,7 +106,7 @@ export const updateMeal = async (req, res, next) => {
         const mealData = JSON.parse(req.body.data)
         if(file){
         const fileBytes = fs.readFileSync(file.path);
-        const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
+        fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
         fileObj = {
             img_path: file.originalname,
             uri: fileUri
@@ -122,7 +123,8 @@ export const updateMeal = async (req, res, next) => {
             console.log(mealPath)
             if(existingMeal.img.img_path !== ''){
                 const mealsWithSameImage = await Meal.find({"img.img_path": existingMeal.img.img_path})
-                if(mealsWithSameImage.length === 0){
+                const dietsWithSameImage = await Diet.find({"img.img_path": existingMeal.img.img_path})
+                if(mealsWithSameImage.length === 0 && dietsWithSameImage.length === 0){
                     fs.unlink(mealPath, (err) => {
                         if (err) {
                             return next(err);
@@ -152,7 +154,8 @@ export const deleteMeal = async (req, res, next) => {
         console.log(mealPath)
         if(deletedMeal.img.img_path !== ''){
             const mealsWithSameImage = await Meal.find({"img.img_path": deletedMeal.img.img_path})
-            if(mealsWithSameImage.length === 0){
+            const dietsWithSameImage = await Diet.find({"img.img_path": deletedMeal.img.img_path})
+            if(mealsWithSameImage.length === 0 && dietsWithSameImage.length === 0){
                 fs.unlink(mealPath, (err) => {
                     if (err) {
                         return next(err);
