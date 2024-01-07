@@ -69,7 +69,7 @@ export const addNewUser = async (req, res, next) => {
             birth_date: userData.birth_date,
             password: hashPasswd,
             health_data: userData.healthData,
-            role: process.env.ACCESS_USER
+            role: userData.role ? userData.role : process.env.ACCESS_USER
         })
         const result = await user.save();
         //create document of for the new user and his entries
@@ -123,6 +123,7 @@ export const updateUserData = async (req, res, next) => {
     const id = req.params.id;
     const userData = req.body;
     try {
+        // const hashPasswd = await bcrypt.hash(userData.password, Number(process.env.BCRYPT_SALT))
         const user = await User.findByIdAndUpdate(id, userData, {returnDocument: "after"})
         res.status(200);
         res.json({
@@ -159,7 +160,7 @@ export const requestChangePassword = async (req, res, next) => {
             return next(ApiError('User with provided email does not exist', 404))
         }
         //if exists, then generate a jwt token and send mail to reset password page with query parameter of that token, e.g. http://fitexpress.com/password-reset?token=lsd839453ld$dfn
-        const token = signToken({userId: user._id}, process.env.PASSWDSECRET, {expiresIn: '30m'});
+        const token = signToken({userId: user._id}, process.env.PASSWDSECRET);
         const userWithToken = await User.findByIdAndUpdate(user._id, {"resetToken": token});
         //send mail
         await sendRequestPasswordMail(user.email, token);
