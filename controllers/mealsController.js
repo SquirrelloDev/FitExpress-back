@@ -15,6 +15,9 @@ export const getMeals = async (req, res, next) => {
         const meals = await Meal.find({}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize)
         if (meals) {
             const mealsImage = meals.map((meal) => {
+                if(meal.img.img_path === ''){
+                    return {...meal._doc, imageBuffer: null}
+                }
                 let mealPath = path.join('public', 'images', meal.img.img_path);
                 const data = fs.readFileSync(mealPath, {encoding: 'base64'})
                 return {...meal._doc, imageBuffer: data}
@@ -62,12 +65,16 @@ export const createMeal = async (req, res, next) => {
     }
     try {
         const mealData = JSON.parse(req.body.data);
+        let fileObj = {img_path: '', uri: ''}
         const file = req.file;
-        const fileBytes = fs.readFileSync(file.path);
-        const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
-        const fileObj = {
-            img_path: file.originalname,
-            uri: fileUri
+        console.log(file)
+        if (file) {
+            const fileBytes = fs.readFileSync(file.path);
+            const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
+            fileObj = {
+                img_path: file.originalname,
+                uri: fileUri
+            }
         }
         const meal = new Meal({
             ...mealData,
@@ -91,14 +98,18 @@ export const updateMeal = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const file = req.file
+    let fileObj = {img_path: '', uri: ''}
+    let fileUri = ''
     const id = req.params.id
     try {
         const mealData = JSON.parse(req.body.data)
+        if(file){
         const fileBytes = fs.readFileSync(file.path);
         const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
-        const fileObj = {
+        fileObj = {
             img_path: file.originalname,
             uri: fileUri
+        }
         }
         const existingMeal = await Meal.findByIdAndUpdate(id, {
             ...mealData,
@@ -109,11 +120,16 @@ export const updateMeal = async (req, res, next) => {
         if (fileUri !== existingMeal.img.uri) {
             const mealPath = path.join('public', 'images', existingMeal.img.img_path)
             console.log(mealPath)
-            fs.unlink(mealPath, (err) => {
-                if (err) {
-                    return next(err);
+            if(existingMeal.img.img_path !== ''){
+                const mealsWithSameImage = await Meal.find({"img.img_path": existingMeal.img.img_path})
+                if(mealsWithSameImage.length === 0){
+                    fs.unlink(mealPath, (err) => {
+                        if (err) {
+                            return next(err);
+                        }
+                    })
                 }
-            })
+            }
         }
         res.status(200)
         res.json({message: 'Meal updated'})
@@ -134,11 +150,16 @@ export const deleteMeal = async (req, res, next) => {
         }
         const mealPath = path.join('public', 'images', deletedMeal.img.img_path)
         console.log(mealPath)
-        fs.unlink(mealPath, (err) => {
-            if (err) {
-                return next(err);
+        if(deletedMeal.img.img_path !== ''){
+            const mealsWithSameImage = await Meal.find({"img.img_path": deletedMeal.img.img_path})
+            if(mealsWithSameImage.length === 0){
+                fs.unlink(mealPath, (err) => {
+                    if (err) {
+                        return next(err);
+                    }
+                })
             }
-        })
+        }
         res.status(200);
         res.json({message: 'Meal deleted!'})
 
