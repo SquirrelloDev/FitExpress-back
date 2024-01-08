@@ -106,12 +106,13 @@ export const updateReport = async (req, res, next) => {
     try {
         const reportToUpdate = await Report.findById(id);
         if(reportToUpdate.report_status !== 'new' && !checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
-            return next(ApiError('You cannot change the report since the status has been updated'))
+            return next(ApiError('You cannot change the report since the status has been updated', 401))
         }
         const updatedReport = await Report.findByIdAndUpdate(id, {
             ...reportData,
+            report_status: reportData.reportStatus,
             order_id: reportData.orderId,
-            deliver_date: reportData.deliveryDate,
+            delivery_date: reportData.deliveryDate,
         })
         if (!updatedReport) {
             return next(ApiError("Report does not exist!", 404))
