@@ -97,7 +97,14 @@ export const updateDayEntry = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
-    const dayData = req.body
+    const dayData = {
+        date: req.body.date,
+        morning_meals: req.body.morningMeals,
+        lunch_meals: req.body.lunchMeals,
+        dinner_meals: req.body.dinnerMeals,
+        teatime_meals: req.body.teatimeMeals,
+        supper_meals: req.body.supperMeals,
+    }
     try {
         const flexiDay = await DayFlexi.findByIdAndUpdate(id, dayData)
         res.status(200);
