@@ -90,6 +90,7 @@ export const createOrder = async (req, res,next) => {
     }
     const orderData = req.body
     const order = new Order({
+        name: orderData.name,
         diet_id: orderData.dietId,
         user_id: orderData.userId,
         price: orderData.price,
@@ -119,6 +120,7 @@ export const updateOrder = async (req, res,next) => {
     const orderData = req.body;
     try{
         const updatedOrder = await Order.findByIdAndUpdate(id, {
+            name: orderData.name,
             diet_id: orderData.dietId,
             user_id: orderData.userId,
             price: orderData.price,
