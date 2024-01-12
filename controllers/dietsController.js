@@ -10,9 +10,11 @@ export const getDiets = async (req, res, next) => {
     if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
+    const page = parseInt(req.query.page);
+    const pageSize = parseInt(req.query.pageSize);
     //CAUTION! Here will be also fetched the generic flexi diet! With this syntax we will get only fixed diets
     try {
-        const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id');
+        const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize);
         if (diets) {
             const dietsImage = diets.map((diet) => {
                 if(diet.img.img_path === ''){
@@ -22,9 +24,18 @@ export const getDiets = async (req, res, next) => {
                 const data = fs.readFileSync(dietPath, {encoding: 'base64'})
                 return {...diet._doc, imageBuffer: data}
             })
+            const totalItems = await Diet.find({diet_type: 'Fixed'}).countDocuments()
             res.status(200);
             res.json({
-                diets: dietsImage
+                diets: dietsImage,
+                paginationInfo: {
+                    totalItems,
+                    hasNextPage: pageSize * page < totalItems,
+                    hasPreviousPage: page > 1,
+                    nextPage: page + 1,
+                    previousPage: page - 1,
+                    lastPage: Math.ceil(totalItems / pageSize)
+                }
             })
         }
 
