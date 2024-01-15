@@ -9,7 +9,7 @@ import {ApiError} from "../utils/errors.js";
 import {sendRequestPasswordMail} from "../utils/mails-service.js";
 
 export const getAllUsers = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -38,7 +38,7 @@ export const getAllUsers = async (req, res, next) => {
 }
 export const getUser = async (req,res,next) => {
     const id = req.params.id
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     try{
@@ -96,7 +96,7 @@ export const logInUser = async (req, res, next) => {
         if (user) {
             const isPasswdMatch = await bcrypt.compare(password, user.password)
             if (isPasswdMatch) {
-                const token = signToken({...user._doc})
+                const token = signToken({_id: user._id, role: user.role,})
                 res.status(200)
                 return res.json({
                     message: 'loggedIn',
@@ -117,7 +117,7 @@ export const logInUser = async (req, res, next) => {
 
 }
 export const updateUserData = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -134,7 +134,7 @@ export const updateUserData = async (req, res, next) => {
     }
 }
 export const updateUserHealthcard = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const healthData = req.body.healthData
@@ -160,7 +160,7 @@ export const requestChangePassword = async (req, res, next) => {
             return next(ApiError('User with provided email does not exist', 404))
         }
         //if exists, then generate a jwt token and send mail to reset password page with query parameter of that token, e.g. http://fitexpress.com/password-reset?token=lsd839453ld$dfn
-        const token = signToken({userId: user._id}, process.env.PASSWDSECRET);
+        const token = signToken({userId: user._id}, process.env.PASSWDSECRET, {expiresIn: '10m'});
         const userWithToken = await User.findByIdAndUpdate(user._id, {"resetToken": token});
         //send mail
         await sendRequestPasswordMail(user.email, token);
@@ -206,7 +206,7 @@ export const changePassword = async (req, res, next) => {
     }
 }
 export const deleteUser = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -216,6 +216,7 @@ export const deleteUser = async (req, res, next) => {
             //also delete addresses, orders, etc.
             const deletedAddresses = await Address.deleteMany({user_id: id});
             const deletedOrders = await Order.deleteMany({user_id: id})
+            const deletedProgressEntries = await ProgressEntry.deleteOne({user_id: id})
             res.status(200);
             return res.json({
                 message: 'User successfully deleted'

@@ -3,7 +3,7 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getDays = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -34,7 +34,7 @@ export const getDays = async (req, res, next) => {
 
 }
 export const getDay = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;
@@ -51,7 +51,7 @@ export const getDay = async (req, res, next) => {
     }
 }
 export const getDayById = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id
@@ -72,7 +72,7 @@ export const getDayById = async (req, res, next) => {
     }
 }
 export const createDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
@@ -93,7 +93,7 @@ export const createDayEntry = async (req, res, next) => {
     res.json({message: 'Day added!'})
 }
 export const updateDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -114,7 +114,7 @@ export const updateDayEntry = async (req, res, next) => {
     }
 }
 export const deleteDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;

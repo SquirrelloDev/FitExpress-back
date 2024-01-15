@@ -22,6 +22,6 @@ const usersSchema = new Schema({
     order_ids: {type: [Schema.Types.ObjectId], ref: 'Order'},
     addresses: {type: [Schema.Types.ObjectId], ref: 'Address'},
     redeemed_codes: {type: [Schema.Types.ObjectId], ref: 'Promocode'},
-    resetToken: {type: String, default: ""}
+    resetToken: {type: String, default: "", select: false}
 })
 export default mongoose.model('User', usersSchema)

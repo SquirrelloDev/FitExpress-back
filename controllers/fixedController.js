@@ -3,7 +3,7 @@ import {parseIntoMidnightISO} from "../utils/dates.js";
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 export const getFixedDays = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -61,7 +61,7 @@ export const getFixedDays = async (req, res, next) => {
 
 }
 export const getFixedDay = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;
@@ -108,7 +108,7 @@ export const getFixedDay = async (req, res, next) => {
     }
 }
 export const getFixedDayById = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -154,7 +154,7 @@ export const getFixedDayById = async (req, res, next) => {
     }
 }
 export const createFixedDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
@@ -169,7 +169,7 @@ export const createFixedDayEntry = async (req, res, next) => {
 
 }
 export const updateFixedDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.date;
@@ -183,7 +183,7 @@ export const updateFixedDayEntry = async (req, res, next) => {
     }
 }
 export const deleteFixedDayEntry = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
