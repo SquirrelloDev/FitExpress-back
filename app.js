@@ -21,6 +21,7 @@ import {entriesRouter} from "./routes/progressEntries.js";
 import {deliveryRouter} from "./routes/deliverPoints.js";
 import {dailyRouter} from "./routes/dailyOrders.js";
 import {errorMiddleware} from "./middleware/errorMiddleware.js";
+import {paymentsRouter} from "./routes/payments.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
@@ -63,6 +64,7 @@ app.use('/reports', reportsRouter);
 app.use('/entries', entriesRouter);
 app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
+app.use('/payments', paymentsRouter);
 //TODO: enable cronjobs when the time comes
 // setupCronJobs();
 //error middleware
