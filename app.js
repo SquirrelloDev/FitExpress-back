@@ -22,6 +22,7 @@ import {deliveryRouter} from "./routes/deliverPoints.js";
 import {dailyRouter} from "./routes/dailyOrders.js";
 import {errorMiddleware} from "./middleware/errorMiddleware.js";
 import {paymentsRouter} from "./routes/payments.js";
+import {fulfill} from "./controllers/paymentController.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
@@ -37,6 +38,7 @@ const diskStorage = multer.diskStorage({
 const upload = multer({dest: '/public/images', storage: diskStorage})
 app.use(logger('dev'));
 app.use(cors())
+app.post('/webhook', bodyParser.raw({type: 'application/json'}) ,fulfill)
 app.use(bodyParser.json())
 mongoose.connect('mongodb+srv://fit-express_admin:bo7OfYFhDuH6vR1I@mycluster.tw0suos.mongodb.net/fit_express' ).then(con => {
     console.log('Conncted to the db')
