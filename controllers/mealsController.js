@@ -52,9 +52,11 @@ export const getMealById = async (req, res, next) => {
         if (!meal) {
             return next(ApiError('Meal does not exist', 404))
         }
+        let mealPath = path.join('public', 'images', meal.img.img_path);
+        const data = fs.readFileSync(mealPath, {encoding: 'base64'})
 
         res.status(200)
-        res.json(meal)
+        res.json({...meal._doc, imageBuffer: data})
     } catch (e) {
         next(e);
     }
