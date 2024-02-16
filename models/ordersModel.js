@@ -11,6 +11,6 @@ const orderSchema = new mongoose.Schema({
     },
     with_weekends: {type: Boolean, required: true, default: false},
     calories: {type: Number, required: true},
-    flexi_tier: {type: String, enum: ['Basic', 'Plus', 'Allin']}
+    flexi_tier: {type: Number, enum: [1, 2, 3]}
 })
 export default mongoose.model('Order', orderSchema)
