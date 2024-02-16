@@ -8,6 +8,13 @@ export const signToken = (data, secretKey = process.env.JSECRET, options = {expi
   return jwt.sign(data, secretKey, options);
 }
 export const checkPermissions = async (userInfo, minAccLvl) => {
-  const existingUser = await User.findById(userInfo._id)
+  let existingUser;
+  try{
+   existingUser = await User.findById(userInfo._id)
+  }
+  catch (e) {
+    e.statusCode = 500;
+    throw e
+  }
   return (existingUser && userInfo.role >= minAccLvl);
 }
