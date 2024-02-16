@@ -158,7 +158,11 @@ export const createFixedDayEntry = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
-    const dayFixed = new DayFixed(dayData)
+    const midnightDate = parseIntoMidnightISO(dayData.date);
+    const dayFixed = new DayFixed({
+        ...dayData,
+        date: midnightDate
+    })
     try {
         await dayFixed.save()
         res.status(201);
@@ -172,7 +176,7 @@ export const updateFixedDayEntry = async (req, res, next) => {
     if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const id = req.params.date;
+    const id = req.params.id;
     try {
         const dayData = req.body
         const fixedDay = await DayFixed.findByIdAndUpdate(id, dayData)

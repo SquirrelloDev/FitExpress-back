@@ -1,6 +1,7 @@
 import DayFlexi from '../models/flexiModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import {parseIntoMidnightISO} from "../utils/dates.js";
 
 export const getDays = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
@@ -39,7 +40,11 @@ export const getDay = async (req, res, next) => {
     }
     const date = req.query.date;
     try {
-        const flexiDay = await DayFlexi.findOne({date: date})
+        const flexiDay = await DayFlexi.findOne({date: date}).populate('morning_meals')
+            .populate('lunch_meals')
+            .populate('dinner_meals')
+            .populate('teatime_meals')
+            .populate('supper_meals')
         if (!flexiDay) {
             return next(ApiError("Day not found", 404))
         }
@@ -76,9 +81,10 @@ export const createDayEntry = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
+
     try {
         const dayFlexi = new DayFlexi({
-            date: dayData.date,
+            date: parseIntoMidnightISO(dayData.date),
             morning_meals: dayData.morningMeals,
             lunch_meals: dayData.lunchMeals,
             dinner_meals: dayData.dinnerMeals,
