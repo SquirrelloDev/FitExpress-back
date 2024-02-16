@@ -12,9 +12,10 @@ export const getDiets = async (req, res, next) => {
     }
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
+    const dietType = String(req.query.dietType);
     //CAUTION! Here will be also fetched the generic flexi diet! With this syntax we will get only fixed diets
     try {
-        const diets = await Diet.find({diet_type: 'Fixed'}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize);
+        const diets = await Diet.find(dietType ? {diet_type: dietType} : {}).populate('exclusions').populate('tags_id').skip((page - 1) * pageSize).limit(pageSize);
         if (diets) {
             const dietsImage = diets.map((diet) => {
                 if(diet.img.img_path === ''){
@@ -55,7 +56,7 @@ export const getDiet = async (req, res, next) => {
             return next(ApiError('Diet does not exist!', 404))
         }
         const dietImgPath = path.join('public', 'images', diet.img.img_path)
-        if(!diet.img.img_path === ''){
+        if(diet.img.img_path !== ''){
          imgData = fs.readFileSync(dietImgPath, {encoding: 'base64'});
         }
         res.status(200)
