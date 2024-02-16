@@ -71,7 +71,7 @@ export const createPromocode = async (req, res, next) => {
     try {
         const existingPromocode = await Promocode.findOne({name: promoData.name});
         if (existingPromocode) {
-            return next(ApiError("Promocode already exist!"), 409)
+            return next(ApiError("Promocode already exist!", 409))
         }
         const newPromocode = new Promocode({
             name: promoData.name,

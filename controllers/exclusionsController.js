@@ -35,11 +35,11 @@ export const getExclusion = async (req,res,next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const tag = await Exclusion.findById(id);
-    if(!tag){
+    const exclusion = await Exclusion.findById(id);
+    if(!exclusion){
         return next(ApiError('Exclusion does not exist!', 404))
     }
-    res.status(200).json(tag);
+    res.status(200).json(exclusion);
 }
 export const addExclusion = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
@@ -65,6 +65,8 @@ export const addExclusion = async (req, res, next) => {
         next(e);
     }
 }
+
+
 export const updateExclusion = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
@@ -83,6 +85,7 @@ export const updateExclusion = async (req, res, next) => {
         next(e);
     }
 }
+
 export const deleteExclusion = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
