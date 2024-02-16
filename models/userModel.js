@@ -4,6 +4,7 @@ const usersSchema = new Schema({
     email: {type: String, required: true, unique: true},
     birth_date: {type: Schema.Types.Date, required: true},
     password: {type: String, required: true, minLength: 8, select: false},
+    phone: {type: String, required: true, minLength: 9},
     role: {type: Number, default: 0},
     health_data: {
         user_height: {type: Number, required: true},

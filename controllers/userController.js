@@ -38,7 +38,7 @@ export const getAllUsers = async (req, res, next) => {
 }
 export const getUser = async (req,res,next) => {
     const id = req.params.id
-    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     try{
@@ -57,6 +57,16 @@ export const getUser = async (req,res,next) => {
 }
 export const addNewUser = async (req, res, next) => {
     const userData = req.body;
+    const defaultHealthData = {
+        user_height: -1,
+        user_weight_current: -1,
+        user_weight_planned: -1,
+        age: -1,
+        pal_active: -1,
+        pal_passive: -1,
+        user_goal: 'balance',
+        bmi: -1,
+    }
     try {
         const existingUser = await User.findOne({email: userData.email})
         if (existingUser) {
@@ -66,12 +76,14 @@ export const addNewUser = async (req, res, next) => {
         const user = new User({
             name: userData.name,
             email: userData.email,
-            birth_date: userData.birth_date,
+            phone: userData.phone,
+            birth_date: userData.birth_date ? userData.birth_date : new Date("1970-01-02"),
             password: hashPasswd,
-            health_data: userData.healthData,
+            health_data: userData.healthData ? userData.healthData : defaultHealthData,
             role: userData.role ? userData.role : process.env.ACCESS_USER
         })
         const result = await user.save();
+        const token = signToken({_id: result._id, role: result.role,})
         //create document of for the new user and his entries
         const emptyProgressEntry = new ProgressEntry({
             user_id: result._id,
@@ -79,13 +91,18 @@ export const addNewUser = async (req, res, next) => {
             water_progress: []
         })
         await emptyProgressEntry.save();
+        res.status(201);
+        res.json({
+            message: 'user has been successfully created!',
+            id: result._id,
+            name: result.name,
+            role: result.role,
+            token
+        })
     } catch (err) {
         return next(err);
     }
-    res.status(201);
-    res.json({
-        message: 'user has been successfully created!'
-    })
+
 
 }
 export const logInUser = async (req, res, next) => {
@@ -103,7 +120,10 @@ export const logInUser = async (req, res, next) => {
                     id: user._id,
                     name: user.name,
                     role: user.role,
-                    token
+                    ...(user.health_data.user_height < 0 && {healthDataNotFilled: true}),
+                    token,
+                    calories: user.health_data.calories_demand,
+                    user_goal: user.health_data.user_goal
                 })
             }
             return next(ApiError('Passwords do not match', 401))
@@ -138,11 +158,12 @@ export const updateUserHealthcard = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const healthData = req.body.healthData
+    const birthDate = req.body.birthDate;
     try {
-        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData}, {returnDocument: "after"})
+        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData, birth_date: birthDate})
         res.status(200);
         return res.json({
-            message: 'loggedIn'
+            message: 'Health card updated!'
         })
     } catch (e) {
         next(e)
