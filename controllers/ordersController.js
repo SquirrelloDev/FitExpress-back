@@ -139,7 +139,24 @@ export const updateOrder = async (req, res,next) => {
     catch (e) {
         next(e);
     }
-
+}
+export const updateSubDate = async (req,res,next) => {
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const subDate = req.body
+    const id = req.params.id
+    try{
+        const updatedOrder = await Order.findByIdAndUpdate(id, {sub_date: subDate})
+        if(!updatedOrder){
+            return next(ApiError('Order does not exist!'),404)
+        }
+        res.status(200);
+        res.json({message: "Order subscription date updated!"})
+    }
+    catch (e) {
+        next(e)
+    }
 }
 export const deleteOrder = async (req, res,next) => {
     if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){

@@ -4,7 +4,7 @@ import {
     getAllOrders,
     getOrderById,
     getOrdersByDiet,
-    getUserOrders, updateOrder
+    getUserOrders, updateOrder, updateSubDate
 } from "../controllers/ordersController.js";
 import isAuth from "../middleware/isAuth.js";
 
@@ -15,5 +15,6 @@ router.get('/diet', isAuth, getOrdersByDiet);
 router.get('/:id', isAuth, getOrderById);
 router.post('/', isAuth, createOrder);
 router.put('/:id', isAuth, updateOrder);
+router.patch('/:id', isAuth, updateSubDate);
 router.delete('/:id', isAuth, deleteOrder)
 export {router as ordersRouter}
