@@ -1,6 +1,7 @@
 import ProgessEntry from '../models/progressEntryModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import {parseIntoMidnightISO} from "../utils/dates.js";
 
 export const getAllProgress = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
@@ -34,7 +35,7 @@ export const getProgressByUser = async (req, res, next) => {
     }
     const userId = req.query.userId;
     try {
-        const entry = await ProgessEntry.find({user_id: userId})
+        const entry = await ProgessEntry.findOne({user_id: userId})
         if (!entry) {
             return next(ApiError("Entries for that user does not exist for some reason! Contact admin to investigate this issue", 404))
         }
@@ -58,14 +59,19 @@ export const addEntry = async (req, res, next) => {
                 if (Object.keys(entryData.data).includes('water')) {
                     return next(ApiError("The 'weight' key should appear for this kind", 422))
                 }
-                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": entryData.data}});
+                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: parseIntoMidnightISO(entryData.data.date), weight: entryData.data.weight} }});
                 break;
             case 'water':
                 if (Object.keys(entryData.data).includes('weight')) {
                     return next(ApiError("The 'water' key should appear for this kind", 422))
                 }
-                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"water_progress": entryData.data}});
+                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"water_progress": {
+                        date: parseIntoMidnightISO(entryData.data.date),
+                            water: entryData.data.water
+                        }}});
                 break;
+            default:
+                return next(ApiError('No key present', 422))
         }
         res.status(201);
         res.json({message: 'Entry added'})
@@ -94,6 +100,8 @@ export const updateEntry = async (req, res, next) => {
                     return next(ApiError("The 'weight' key should appear for this kind", 422))
                 }
                 break;
+            default:
+                return next(ApiError('No key present', 422))
         }
         const userProgressDoc = await ProgessEntry.findOne({user_id: userId}).select(selectArr);
         const entries = req.query.kind === 'weight' ? userProgressDoc.weight_progress : userProgressDoc.water_progress;

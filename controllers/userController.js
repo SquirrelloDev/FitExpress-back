@@ -7,6 +7,7 @@ import jwt from 'jsonwebtoken'
 import {checkPermissions, signToken} from "../utils/auth.js";
 import {ApiError} from "../utils/errors.js";
 import {sendRequestPasswordMail} from "../utils/mails-service.js";
+import {parseIntoMidnightISO} from "../utils/dates.js";
 
 export const getAllUsers = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
@@ -77,7 +78,7 @@ export const addNewUser = async (req, res, next) => {
             name: userData.name,
             email: userData.email,
             phone: userData.phone,
-            birth_date: userData.birth_date ? userData.birth_date : new Date("1970-01-02"),
+            birth_date: userData.birth_date ? parseIntoMidnightISO(new Date(userData.birth_date)) : new Date("1970-01-02"),
             password: hashPasswd,
             health_data: userData.healthData ? userData.healthData : defaultHealthData,
             role: userData.role ? userData.role : process.env.ACCESS_USER
