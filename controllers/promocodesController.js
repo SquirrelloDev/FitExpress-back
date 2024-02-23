@@ -48,6 +48,7 @@ export const getPromocodeByName = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const promoName = req.params.name;
+    const userId = req.query.userId
     try {
         const promocode = await Promocode.findOne({name: promoName});
         if (!promocode) {
@@ -55,6 +56,11 @@ export const getPromocodeByName = async (req, res, next) => {
         }
         if (promocode.exp_date < new Date()) {
             return next(ApiError("Promocode expired", 404))
+        }
+        const userCodes = (await User.findById(userId).select("redeemed_codes")).redeemed_codes;
+        const existingPromocode = userCodes.find(userCode => (userCode._id).toString() === (promocode._id).toString());
+        if(existingPromocode){
+            return next(ApiError('Code already used!', 409))
         }
         res.status(200);
         res.json(promocode)

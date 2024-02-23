@@ -2,6 +2,7 @@ import {Stripe} from "stripe";
 import {log} from "debug";
 import Order from "../models/ordersModel.js";
 import User from "../models/userModel.js";
+import {parseIntoMidnightISO} from "../utils/dates.js";
 
 export const processPayment = async (req, res, next) => {
     const stripe = new Stripe(process.env.STRIPE_SK)
@@ -16,7 +17,10 @@ export const processPayment = async (req, res, next) => {
                 price: order.order.price,
                 address_id: order.order.addressId,
                 name: order.order.name,
-                sub_date: order.order.subDate,
+                sub_date: {
+                    from: parseIntoMidnightISO(order.order.subDate.from),
+                    to: parseIntoMidnightISO(order.order.subDate.to),
+                },
                 ...(order.order.flexiTier && {flexi_tier: order.order.flexiTier})
             }
         })
@@ -43,8 +47,8 @@ export const processPayment = async (req, res, next) => {
             line_items: lineItems,
             mode: 'payment',
             success_url: 'http://localhost:5173/cart/payment/success',
-            cancel_url: 'http://localhost:5173/',
-            metadata: ordersObj
+            cancel_url: 'http://localhost:5173/cart',
+            metadata: {...ordersObj, appliedPromocode: req.body.appliedPromocode}
         }, {apiKey: process.env.STRIPE_SK})
         res.status(200)
         res.json({id: session.id})
@@ -53,16 +57,21 @@ export const processPayment = async (req, res, next) => {
     }
 }
 const endpointSec = 'whsec_ecb8b873bdc96146dc832f0b50858c87a4e66abea97adc405b23228af1d7f30c'
-const createOrders = async (lineItems) => {
-    const orders = Object.values(lineItems).map(item => JSON.parse(item));
-    const mongoOrders = orders.map((order) => new Order(order))
+const createOrders = async (metaOrders, appliedPromocode) => {
+    const orders = Object.values(metaOrders).map(item => JSON.parse(item));
+    const userId = orders[0].user_id
+    const mongoOrders = orders.map((order) => new Order({...order, is_active: true}))
     try {
         for (const mongoOrder of mongoOrders) {
             const createdOrder = await mongoOrder.save()
             await User.findByIdAndUpdate(mongoOrder.userId, {$push: {'order_ids': createdOrder._id}})
         }
-    }
-    catch (e){
+        if (appliedPromocode !== '') {
+            const userCodes = await User.findById(userId).select("redeemed_codes");
+            const newCodes = [...userCodes.redeemed_codes, appliedPromocode];
+            await User.updateOne({_id: userId}, {redeemed_codes: newCodes})
+        }
+    } catch (e) {
         await Promise.reject(e)
     }
 }
@@ -82,12 +91,11 @@ export const fulfill = async (req, res, next) => {
             event.data.object.id,
         );
         const lineItems = sessionWithLineItems.metadata;
-
+        const {['appliedPromocode']: promocodeId, ...onlyOrders} = lineItems
         // Fulfill the purchase...
-        try{
-        await createOrders(lineItems);
-        }
-        catch (e) {
+        try {
+            await createOrders(onlyOrders, promocodeId);
+        } catch (e) {
             return next(e)
         }
     }
