@@ -140,26 +140,26 @@ export const updateOrder = async (req, res,next) => {
         next(e);
     }
 }
-export const updateSubDate = async (req,res,next) => {
+export const updateActiveStatus = async (req,res,next) => {
     if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const subDate = req.body
+    const activeStatus = req.body.status
     const id = req.params.id
     try{
-        const updatedOrder = await Order.findByIdAndUpdate(id, {sub_date: subDate})
+        const updatedOrder = await Order.findByIdAndUpdate(id, {is_active: activeStatus})
         if(!updatedOrder){
             return next(ApiError('Order does not exist!'),404)
         }
         res.status(200);
-        res.json({message: "Order subscription date updated!"})
+        res.json({message: "Order status updated!"})
     }
     catch (e) {
         next(e)
     }
 }
 export const deleteOrder = async (req, res,next) => {
-    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -176,4 +176,14 @@ export const deleteOrder = async (req, res,next) => {
         next(e)
     }
 
+}
+export const deactivateOrders = async () => {
+    const currentDate = new Date().setHours(1, 0, 0, 0);
+    const currentDateISO = new Date(currentDate).toISOString();
+    try{
+        const dailyEntry = await Order.updateMany({'sub_date.to': currentDateISO}, {is_active: false});
+    }
+    catch (e){
+        console.error(e)
+    }
 }
