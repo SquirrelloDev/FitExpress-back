@@ -90,7 +90,6 @@ export const addAddress = async (req, res, next) => {
         voivodeship: addressData.voivodeship,
         extra_info: addressData.extra_info,
         is_weekend: addressData.is_weekend,
-        is_default: addressData.is_default,
         linked_points: addressData.linked_points,
         user_id: userId
     });
@@ -117,7 +116,6 @@ export const updateAddress = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const addressId = req.params.id;
-    console.log(req.body.isWeekend)
     const addressData = { ...req.body.address, userId: req.body.userId }
     console.log(addressData)
     try {

@@ -13,7 +13,6 @@ const addresesSchema = new mongoose.Schema({
     },
     extra_info: {type: String, required: true},
     is_weekend: {type: Boolean, required: true, default: false},
-    is_default: {type: Boolean, required: true, default: false},
     linked_points: {type: [Schema.ObjectId], ref: 'Delivery_point', default: []},
     user_id: {type: Schema.Types.ObjectId, ref: 'User'}
 })
