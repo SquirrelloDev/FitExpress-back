@@ -3,6 +3,7 @@ import User from '../models/userModel.js'
 import Order from '../models/ordersModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import mongoose from "mongoose";
 
 export const getAddresses = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
@@ -142,7 +143,7 @@ export const deleteAddress = async (req, res, next) => {
             const userAddresses = user.addresses
             const updatedAddresses = userAddresses.filter(addressId => addressId.toString() !== id)
             await User.updateOne({_id: user._id}, {addresses: updatedAddresses})
-            await Order.updateMany({address_id: id}, {address_id: ''});
+            await Order.updateMany({address_id: id}, {$unset: {address_id: ''}});
             res.status(200);
             return res.json({
                 message: "Address deleted sucessfully!",

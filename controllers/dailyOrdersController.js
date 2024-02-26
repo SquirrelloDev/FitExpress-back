@@ -168,7 +168,7 @@ export const lockAddingOrders = async () => {
             //sprawdź które z brakujących orderów są aktywne poprzez datę oraz te, które mają ustawiony adres. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
             for (const orderToAdd of ordersToAdd) {
                 const orderFromCollection = await Order.findById(orderToAdd.toString());
-                if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || (orderFromCollection.address_id).toString() === "") {
+                if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || !orderFromCollection.address_id) {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }
