@@ -37,7 +37,7 @@ export const getAllDailyOrders = async (req, res, next) => {
     }
 }
 export const getDailyOrderByDate = async (req, res, next) => {
-    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date
@@ -105,7 +105,6 @@ export const addOrderToList = async (req, res, next) => {
         //modifing
         const currentDailyDocOrders = currentDailyDoc.orders;
         const currentDailyOrder = currentDailyDocOrders.find(dailyOrder => (dailyOrder.order_id).toString() === orderData.orderId);
-        console.log(currentDailyOrder)
         const updateObj = {
             user_id: orderData.userId,
             diet_id: orderData.dietId,
@@ -117,10 +116,13 @@ export const addOrderToList = async (req, res, next) => {
         }
         //modifing
         if (currentDailyOrder) {
+            let updateArr = currentDailyDocOrders;
+            const currentDailyOrderIdx = currentDailyDocOrders.findIndex(dailyOrder => (dailyOrder.order_id).toString() === orderData.orderId)
+            updateArr[currentDailyOrderIdx] = updateObj
             await DailyOrder.updateOne({
-                date: orderData.date,
-                "orders.order_id": orderData.orderId
-            }, {$set: {"orders.$": updateObj}})
+                date: orderData.date
+                // "orders.order_id": orderData.orderId
+            }, {$set: {"orders": updateArr}})
             res.status(200);
             resMsg.message = 'Entry updated!';
         } else {
