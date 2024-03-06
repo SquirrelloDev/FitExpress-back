@@ -21,6 +21,7 @@
     "node-cron": "^3.0.3",
     "nodemailer": "^6.9.7",
     "nodemailer-brevo-transport": "^2.1.0",
-    "stripe": "^14.16.0"
+    "stripe": "^14.16.0",
+    "web-push": "^3.6.7"
   }
 }
