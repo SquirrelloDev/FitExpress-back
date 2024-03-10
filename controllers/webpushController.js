@@ -16,6 +16,9 @@ export const removeSubscription = async (req,res,next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const sub = await Webpush.findOneAndDelete({endpoint: req.body.endpoint})
+    if(!sub){
+        return next(ApiError('Subscription not found!', 404))
+    }
     res.status(200).json({message: 'sub removed'})
 }
 export const notifyAll = async (req,res,next) => {
@@ -25,8 +28,7 @@ export const notifyAll = async (req,res,next) => {
             body: 'Powiadomienie z serwera'
         }
     })
-    const allSubs = await Webpush.find({});
-    sendNotification(allSubs, payload)
+    await sendNotification(payload)
 
     res.status(200).json({message: 'Push sent!'})
 }
