@@ -26,7 +26,7 @@ export const sendRequestPasswordMail = async (email,token) => {
             <h1>Zmiana hasła</h1>
             <p>Zauważyliśmy, że chcesz zmienić hasło do swojego konta FitExpress</p>
             <h3>Użyj linku poniżej, by zresetować swoje hasło</h3>
-            <a href="https://localhost:3001/resetPassword?token=${token}">Zmień hasło</a>
+            <a href="http://localhost:5173/resetPassword?token=${token}">Zmień hasło</a>
             <p>Jeśli to nie ty, zignoruj tę wiadomość i powiadom nas o problemie</p>
             `
     })
