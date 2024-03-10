@@ -4,7 +4,7 @@ const addresesSchema = new mongoose.Schema({
     street: {type: String, required: true},
     city: {type: String, required: true},
     postal: {type: String, required: true},
-    building_no: {type: Number, required: true},
+    building_no: {type: String, required: true},
     apartment_no: {type: Number},
     voivodeship: {
         type: String,

@@ -80,8 +80,6 @@ export const addAddress = async (req, res, next) => {
 
     const addressData = req.body.address;
     const userId = req.body.userId;
-    console.log(userId)
-    console.log(addressData)
     const newAddress = new Address({
         street: addressData.street,
         city: addressData.city,
