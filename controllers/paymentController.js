@@ -56,7 +56,8 @@ export const processPayment = async (req, res, next) => {
         next(e)
     }
 }
-const endpointSec = 'whsec_ecb8b873bdc96146dc832f0b50858c87a4e66abea97adc405b23228af1d7f30c'
+// TODO: Change webhook secret on prod
+const endpointSec = process.env.STRIPE_WEBHOOK
 const createOrders = async (metaOrders, appliedPromocode) => {
     const orders = Object.values(metaOrders).map(item => JSON.parse(item));
     const userId = orders[0].user_id
