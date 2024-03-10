@@ -5,7 +5,7 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getTags = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -19,7 +19,7 @@ export const getTags = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -30,8 +30,19 @@ export const getTags = async (req, res, next) => {
         next(e);
     }
 }
+export const getTag = async (req,res,next) => {
+    const id = req.params.id
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const tag = await Tag.findById(id);
+    if(!tag){
+        return next(ApiError('Tag does not exist!', 404))
+    }
+    res.status(200).json(tag);
+}
 export const addTag = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const tagData = req.body;
@@ -49,7 +60,7 @@ export const addTag = async (req, res, next) => {
         if (!createdTag) {
             return next(ApiError('Error while creating a tag'))
         }
-        res.status(200);
+        res.status(201);
         res.json({message: 'New tag added'})
     } catch (e) {
         next(e);
@@ -57,7 +68,7 @@ export const addTag = async (req, res, next) => {
 
 }
 export const updateTag = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -75,7 +86,7 @@ export const updateTag = async (req, res, next) => {
 
 }
 export const deleteTag = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;

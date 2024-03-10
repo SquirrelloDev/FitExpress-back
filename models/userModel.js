@@ -4,6 +4,7 @@ const usersSchema = new Schema({
     email: {type: String, required: true, unique: true},
     birth_date: {type: Schema.Types.Date, required: true},
     password: {type: String, required: true, minLength: 8, select: false},
+    phone: {type: String, required: true, minLength: 9},
     role: {type: Number, default: 0},
     health_data: {
         user_height: {type: Number, required: true},
@@ -21,6 +22,7 @@ const usersSchema = new Schema({
     },
     order_ids: {type: [Schema.Types.ObjectId], ref: 'Order'},
     addresses: {type: [Schema.Types.ObjectId], ref: 'Address'},
-    redeemed_codes: {type: [Schema.Types.ObjectId], ref: 'Promocode'}
+    redeemed_codes: {type: [Schema.Types.ObjectId], ref: 'Promocode'},
+    resetToken: {type: String, default: "", select: false}
 })
 export default mongoose.model('User', usersSchema)

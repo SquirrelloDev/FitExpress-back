@@ -9,7 +9,7 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getAllDailyOrders = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -25,7 +25,7 @@ export const getAllDailyOrders = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -37,12 +37,44 @@ export const getAllDailyOrders = async (req, res, next) => {
     }
 }
 export const getDailyOrderByDate = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date
     try {
-        const currentDailyDoc = await DailyOrder.findOne({date: date});
+        const currentDailyDoc = await DailyOrder.findOne({date: date}).populate({
+            path: 'orders',
+            populate: {
+                path:'user_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'diet_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'order_id'
+            }
+        }).
+        populate({
+            path: 'orders',
+            populate: {
+                path: 'selected_meals'
+            }
+        })
+            .populate({
+            path: 'orders',
+            populate: {
+                path: 'order_id',
+                populate: {
+                    path: 'address_id'
+                }
+            }
+        });
         if (!currentDailyDoc) {
             return next(ApiError('Day not found! Report this issue to the administrator immediately', 404))
         }
@@ -54,7 +86,7 @@ export const getDailyOrderByDate = async (req, res, next) => {
     }
 }
 export const addOrderToList = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const orderData = req.body;
@@ -73,7 +105,6 @@ export const addOrderToList = async (req, res, next) => {
         //modifing
         const currentDailyDocOrders = currentDailyDoc.orders;
         const currentDailyOrder = currentDailyDocOrders.find(dailyOrder => (dailyOrder.order_id).toString() === orderData.orderId);
-        console.log(currentDailyOrder)
         const updateObj = {
             user_id: orderData.userId,
             diet_id: orderData.dietId,
@@ -85,10 +116,13 @@ export const addOrderToList = async (req, res, next) => {
         }
         //modifing
         if (currentDailyOrder) {
+            let updateArr = currentDailyDocOrders;
+            const currentDailyOrderIdx = currentDailyDocOrders.findIndex(dailyOrder => (dailyOrder.order_id).toString() === orderData.orderId)
+            updateArr[currentDailyOrderIdx] = updateObj
             await DailyOrder.updateOne({
-                date: orderData.date,
-                "orders.order_id": orderData.orderId
-            }, {$set: {"orders.$": updateObj}})
+                date: orderData.date
+                // "orders.order_id": orderData.orderId
+            }, {$set: {"orders": updateArr}})
             res.status(200);
             resMsg.message = 'Entry updated!';
         } else {
@@ -133,10 +167,10 @@ export const lockAddingOrders = async () => {
             if (ordersToAdd.length === 0) {
                 continue;
             }
-            //sprawdź które z brakujących orderów są aktywne poprzez datę. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
+            //sprawdź które z brakujących orderów są aktywne poprzez datę oraz te, które mają ustawiony adres. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
             for (const orderToAdd of ordersToAdd) {
                 const orderFromCollection = await Order.findById(orderToAdd.toString());
-                if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || orderFromCollection.address_id === "") {
+                if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || !orderFromCollection.address_id) {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }

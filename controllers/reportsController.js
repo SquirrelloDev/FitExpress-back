@@ -3,13 +3,13 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getAllReports = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try {
-        const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize);
+        const reports = await Report.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('user_id');
         const totalItems = await Report.find({}).countDocuments();
         res.status(200);
         res.json({
@@ -17,7 +17,7 @@ export const getAllReports = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -29,12 +29,12 @@ export const getAllReports = async (req, res, next) => {
 
 }
 export const getReportById = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
     try {
-        const report = await Report.findById(id);
+        const report = await Report.findById(id).populate('user_id');
         if (!report) {
             return next(ApiError("Report does not exist!", 404))
         }
@@ -46,7 +46,7 @@ export const getReportById = async (req, res, next) => {
 
 }
 export const getUserReports = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.query.userId;
@@ -64,7 +64,7 @@ export const getUserReports = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -76,7 +76,7 @@ export const getUserReports = async (req, res, next) => {
 
 }
 export const createReport = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const reportData = req.body;
@@ -98,20 +98,21 @@ export const createReport = async (req, res, next) => {
 
 }
 export const updateReport = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
     const reportData = req.body;
     try {
         const reportToUpdate = await Report.findById(id);
-        if(reportToUpdate.report_status !== 'new' && !checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
-            return next(ApiError('You cannot change the report since the status has been updated'))
+        if(reportToUpdate.report_status !== 'new' && !await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+            return next(ApiError('You cannot change the report since the status has been updated', 401))
         }
         const updatedReport = await Report.findByIdAndUpdate(id, {
             ...reportData,
+            report_status: reportData.reportStatus,
             order_id: reportData.orderId,
-            deliver_date: reportData.deliveryDate,
+            delivery_date: reportData.deliveryDate,
         })
         if (!updatedReport) {
             return next(ApiError("Report does not exist!", 404))
@@ -124,7 +125,7 @@ export const updateReport = async (req, res, next) => {
 
 }
 export const updateReportStatus = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -144,13 +145,13 @@ export const updateReportStatus = async (req, res, next) => {
 
 }
 export const deleteReport = async (req, res, next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
     try {
         const reportToDelete = await Report.findById(id);
-        if(reportToDelete.report_status !== 'new' && !checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+        if(reportToDelete.report_status !== 'new' && !await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
             return next(ApiError('You cannot change the report since the status has been updated'))
         }
         const deletedReport = await Report.findByIdAndDelete(id);

@@ -1,8 +1,10 @@
 import DayFlexi from '../models/flexiModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import {parseIntoMidnightISO} from "../utils/dates.js";
+
 export const getDays = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -21,7 +23,7 @@ export const getDays = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -33,12 +35,37 @@ export const getDays = async (req, res, next) => {
 
 }
 export const getDay = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const date = req.query.date;
     try {
-        const flexiDay = await DayFlexi.findOne({date: date})
+        const flexiDay = await DayFlexi.findOne({date: date}).populate('morning_meals')
+            .populate('lunch_meals')
+            .populate('dinner_meals')
+            .populate('teatime_meals')
+            .populate('supper_meals')
+        if (!flexiDay) {
+            return next(ApiError("Day not found", 404))
+        }
+        res.status(200);
+        res.json(flexiDay);
+
+    } catch (e) {
+        next(e);
+    }
+}
+export const getDayById = async (req, res, next) => {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const id = req.params.id
+    try {
+        const flexiDay = await DayFlexi.findById(id).populate('morning_meals')
+            .populate('lunch_meals')
+            .populate('dinner_meals')
+            .populate('teatime_meals')
+            .populate('supper_meals')
         if (!flexiDay) {
             return next(ApiError("Day not found", 404))
         }
@@ -50,13 +77,14 @@ export const getDay = async (req, res, next) => {
     }
 }
 export const createDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
+
     try {
         const dayFlexi = new DayFlexi({
-            date: dayData.date,
+            date: parseIntoMidnightISO(dayData.date),
             morning_meals: dayData.morningMeals,
             lunch_meals: dayData.lunchMeals,
             dinner_meals: dayData.dinnerMeals,
@@ -71,28 +99,35 @@ export const createDayEntry = async (req, res, next) => {
     res.json({message: 'Day added!'})
 }
 export const updateDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
-    const dayData = req.body
+    const id = req.params.id;
+    const dayData = {
+        date: req.body.date,
+        morning_meals: req.body.morningMeals,
+        lunch_meals: req.body.lunchMeals,
+        dinner_meals: req.body.dinnerMeals,
+        teatime_meals: req.body.teatimeMeals,
+        supper_meals: req.body.supperMeals,
+    }
     try {
-        const flexiDay = await DayFlexi.updateOne({date: date}, dayData)
+        const flexiDay = await DayFlexi.findByIdAndUpdate(id, dayData)
         res.status(200);
-        res.json({message: `Day ${date} updated`})
+        res.json({message: 'Day updated'})
     } catch (e) {
         next(e);
     }
 }
 export const deleteDayEntry = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = req.query.date;
+    const id = req.params.id;
     try {
-        const deletedDay = await DayFlexi.findOneAndDelete({date: date});
+        const deletedDay = await DayFlexi.findByIdAndDelete(id);
         if (!deletedDay) {
-            return next(ApiError(`Assignment for the date: ${date} does not exist!`, 404))
+            return next(ApiError(`Assignment for the date does not exist!`, 404))
         }
         res.status(200);
         res.json({message: 'Day deleted! Make sure to add assignment for this day as soon as possible!'})

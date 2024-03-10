@@ -21,7 +21,9 @@ import {entriesRouter} from "./routes/progressEntries.js";
 import {deliveryRouter} from "./routes/deliverPoints.js";
 import {dailyRouter} from "./routes/dailyOrders.js";
 import {errorMiddleware} from "./middleware/errorMiddleware.js";
-import {lockAddingOrders} from "./controllers/dailyOrdersController.js";
+import {paymentsRouter} from "./routes/payments.js";
+import {fulfill} from "./controllers/paymentController.js";
+import {webpushRouter} from "./routes/webpush.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
@@ -37,8 +39,9 @@ const diskStorage = multer.diskStorage({
 const upload = multer({dest: '/public/images', storage: diskStorage})
 app.use(logger('dev'));
 app.use(cors())
+app.post('/webhook', bodyParser.raw({type: 'application/json'}) ,fulfill)
 app.use(bodyParser.json())
-mongoose.connect('mongodb+srv://fit-express_admin:bo7OfYFhDuH6vR1I@mycluster.tw0suos.mongodb.net/fit_express' ).then(con => {
+mongoose.connect(process.env.MONGO_ATLAS).then(con => {
     console.log('Conncted to the db')
 })
 
@@ -64,6 +67,8 @@ app.use('/reports', reportsRouter);
 app.use('/entries', entriesRouter);
 app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
+app.use('/payments', paymentsRouter);
+app.use('/push', webpushRouter)
 //TODO: enable cronjobs when the time comes
 // setupCronJobs();
 //error middleware

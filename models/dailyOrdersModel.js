@@ -7,7 +7,7 @@ const dailyOrderSchema = new Schema({
         user_id: {type: Schema.Types.ObjectId, required:true, ref: 'User'},
         diet_id: {type: Schema.Types.ObjectId, ref: 'Diet'},
         order_id: {type: Schema.Types.ObjectId, required: true, ref: 'Order'},
-        selected_meals: {type: [Schema.Types.ObjectId]}
+        selected_meals: {type: [Schema.Types.ObjectId], ref: 'Meal'}
     }
     ],
 })

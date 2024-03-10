@@ -3,13 +3,13 @@ import User from '../models/userModel.js';
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 export const getAllOrders = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
     const pageSize = parseInt(req.query.pageSize);
     try{
-        const orders = await Order.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('diet_id').populate('user_id');
+        const orders = await Order.find({}).skip((page - 1) * pageSize).limit(pageSize).populate('diet_id').populate('user_id').populate('address_id');
         const totalItems = await Order.find({}).countDocuments()
         res.status(200);
         res.json({
@@ -17,7 +17,7 @@ export const getAllOrders = async (req, res,next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems/pageSize)
@@ -30,12 +30,12 @@ export const getAllOrders = async (req, res,next) => {
 
 }
 export const getUserOrders = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userId = req.query.userId;
     try{
-        const userOrders = await Order.find({user_id: userId}).populate('diet_id').select('-user_id');
+        const userOrders = await Order.find({user_id: userId}).populate('diet_id').populate('address_id').select('-user_id');
         if (!userOrders) {
             return next(ApiError("User with a given id doesn't have any order"), 404)
         }
@@ -48,12 +48,12 @@ export const getUserOrders = async (req, res,next) => {
 
 }
 export const getOrdersByDiet = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dietId = req.query.dietId;
     try {
-        const dietOrders = await Order.find({diet_id: dietId}).populate('user_id').select('-diet_id');
+        const dietOrders = await Order.find({diet_id: dietId}).populate('user_id').populate('address_id').select('-diet_id');
         if (!dietOrders) {
             return next(ApiError("There are no orders for the given diet", 404))
         }
@@ -66,12 +66,12 @@ export const getOrdersByDiet = async (req, res,next) => {
 
 }
 export const getOrderById = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
     try{
-        const order = await Order.findById(id).populate("diet_id").populate("user_id");
+        const order = await Order.findById(id).populate("diet_id").populate('address_id').populate("user_id");
         if (!order) {
             return next(ApiError("Order does not exist!", 404))
         }
@@ -85,14 +85,16 @@ export const getOrderById = async (req, res,next) => {
 
 }
 export const createOrder = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const orderData = req.body
     const order = new Order({
+        name: orderData.name,
         diet_id: orderData.dietId,
         user_id: orderData.userId,
         price: orderData.price,
+        address_id: orderData.addressId,
         sub_date: orderData.subDate,
         with_weekends: orderData.withWeekends,
         calories: orderData.calories,
@@ -111,16 +113,18 @@ export const createOrder = async (req, res,next) => {
 
 }
 export const updateOrder = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
     const orderData = req.body;
     try{
         const updatedOrder = await Order.findByIdAndUpdate(id, {
+            name: orderData.name,
             diet_id: orderData.dietId,
             user_id: orderData.userId,
             price: orderData.price,
+            address_id: orderData.addressId,
             sub_date: orderData.subDate,
             with_weekends: orderData.withWeekends,
             calories: orderData.calories,
@@ -135,10 +139,27 @@ export const updateOrder = async (req, res,next) => {
     catch (e) {
         next(e);
     }
-
+}
+export const updateActiveStatus = async (req,res,next) => {
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const activeStatus = req.body.status
+    const id = req.params.id
+    try{
+        const updatedOrder = await Order.findByIdAndUpdate(id, {is_active: activeStatus})
+        if(!updatedOrder){
+            return next(ApiError('Order does not exist!'),404)
+        }
+        res.status(200);
+        res.json({message: "Order status updated!"})
+    }
+    catch (e) {
+        next(e)
+    }
 }
 export const deleteOrder = async (req, res,next) => {
-    if(!checkPermissions(req.userInfo, process.env.ACCESS_USER)){
+    if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id;
@@ -155,4 +176,14 @@ export const deleteOrder = async (req, res,next) => {
         next(e)
     }
 
+}
+export const deactivateOrders = async () => {
+    const currentDate = new Date().setHours(1, 0, 0, 0);
+    const currentDateISO = new Date(currentDate).toISOString();
+    try{
+        const dailyEntry = await Order.updateMany({'sub_date.to': currentDateISO}, {is_active: false});
+    }
+    catch (e){
+        console.error(e)
+    }
 }

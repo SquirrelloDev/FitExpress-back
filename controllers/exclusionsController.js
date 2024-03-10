@@ -5,7 +5,7 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getExclusions = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -19,7 +19,7 @@ export const getExclusions = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -30,8 +30,19 @@ export const getExclusions = async (req, res, next) => {
         next(e);
     }
 }
+export const getExclusion = async (req,res,next) => {
+    const id = req.params.id
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+        return next(ApiError("You're not authorized to perform this action!", 401))
+    }
+    const exclusion = await Exclusion.findById(id);
+    if(!exclusion){
+        return next(ApiError('Exclusion does not exist!', 404))
+    }
+    res.status(200).json(exclusion);
+}
 export const addExclusion = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const exclusionName = req.body.name;
@@ -54,8 +65,10 @@ export const addExclusion = async (req, res, next) => {
         next(e);
     }
 }
+
+
 export const updateExclusion = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const exclusionName = req.body.name;
@@ -72,8 +85,9 @@ export const updateExclusion = async (req, res, next) => {
         next(e);
     }
 }
+
 export const deleteExclusion = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const id = req.params.id

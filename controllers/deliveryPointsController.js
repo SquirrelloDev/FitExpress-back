@@ -4,7 +4,7 @@ import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
 export const getAllPoints = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const page = parseInt(req.query.page);
@@ -18,7 +18,7 @@ export const getAllPoints = async (req, res, next) => {
             paginationInfo: {
                 totalItems,
                 hasNextPage: pageSize * page < totalItems,
-                haPreviousPage: page > 1,
+                hasPreviousPage: page > 1,
                 nextPage: page + 1,
                 previousPage: page - 1,
                 lastPage: Math.ceil(totalItems / pageSize)
@@ -30,23 +30,25 @@ export const getAllPoints = async (req, res, next) => {
     }
 }
 export const getPointByCoords = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const userLat = req.query.lat;
     const userLng = req.query.lng;
     let inRange = false;
+    const allowedPoints = [];
     try {
         const allPoints = await DeliveryPoint.find({});
         for (const point of allPoints) {
             const distance = getDistanceFromCoords(userLat, userLng, point.lat, point.lng);
             if (distance <= point.radiusKM) {
+                allowedPoints.push(point._id);
                 inRange = true;
                 break;
             }
         }
         res.status(200);
-        res.json({inRange: inRange})
+        res.json({inRange: inRange, allowedPoints})
 
     } catch (e) {
         next(e)
@@ -54,7 +56,7 @@ export const getPointByCoords = async (req, res, next) => {
 
 }
 export const getPointById = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id
@@ -71,7 +73,7 @@ export const getPointById = async (req, res, next) => {
     }
 }
 export const addPoint = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointData = req.body
@@ -87,13 +89,13 @@ export const addPoint = async (req, res, next) => {
 }
 //admin only
 export const updatePoint = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id
     const pointData = req.body;
     try {
-        const updatedPoint = DeliveryPoint.findByIdAndUpdate(pointId, pointData)
+        const updatedPoint = await DeliveryPoint.findByIdAndUpdate(pointId, pointData)
         if (!updatedPoint) {
             return next(ApiError('Delivery point does not exist!', 404))
         }
@@ -106,7 +108,7 @@ export const updatePoint = async (req, res, next) => {
 }
 //admin only
 export const deletePoint = async (req, res, next) => {
-    if (!checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
+    if (!await checkPermissions(req.userInfo, process.env.ACCESS_ADMIN)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const pointId = req.params.id;
