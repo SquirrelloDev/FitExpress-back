@@ -43,7 +43,7 @@ export const getUser = async (req,res,next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     try{
-        const user = await User.findById(id);
+        const user = await User.findById(id).populate('redeemed_codes');
         if(!user){
             return next(ApiError('User does not exist!', 404))
         }
