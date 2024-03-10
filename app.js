@@ -41,7 +41,7 @@ app.use(logger('dev'));
 app.use(cors())
 app.post('/webhook', bodyParser.raw({type: 'application/json'}) ,fulfill)
 app.use(bodyParser.json())
-mongoose.connect('mongodb+srv://fit-express_admin:bo7OfYFhDuH6vR1I@mycluster.tw0suos.mongodb.net/fit_express' ).then(con => {
+mongoose.connect(process.env.MONGO_ATLAS).then(con => {
     console.log('Conncted to the db')
 })
 
