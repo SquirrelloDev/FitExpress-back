@@ -11,7 +11,7 @@ import {
     sendNotification, supperReminder, teatimeReminder
 } from "./pushMessage.js";
 const setupCronJobs = () => {
-  cron.schedule("0 0 * * *", () => {
+  cron.schedule("58 23 * * *", () => {
       lockAddingOrders();
       initDay();
   });

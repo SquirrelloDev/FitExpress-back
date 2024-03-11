@@ -20,7 +20,7 @@ export const getMeals = async (req, res, next) => {
                     return {...meal._doc, imageBuffer: null}
                 }
                 let mealPath = path.join('public', 'images', meal.img.img_path);
-                const data = fs.readFileSync(mealPath, {encoding: 'base64'})
+                const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}) : null
                 return {...meal._doc, imageBuffer: data}
             })
             const totalItems = await Meal.find({}).countDocuments()
@@ -53,7 +53,7 @@ export const getMealById = async (req, res, next) => {
             return next(ApiError('Meal does not exist', 404))
         }
         let mealPath = path.join('public', 'images', meal.img.img_path);
-        const data = fs.readFileSync(mealPath, {encoding: 'base64'})
+        const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}) : null
 
         res.status(200)
         res.json({...meal._doc, imageBuffer: data})
