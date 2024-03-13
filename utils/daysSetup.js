@@ -6,46 +6,45 @@ import DayFixed from "../models/fixedModel.js";
 import {getNextDayMidnight} from "./dates.js";
 
 export const initDay = async () => {
-    const nextDate = getNextDayMidnight()
-    const newDay = new DailyOrder({
-        date: nextDate,
-        orders: []
-    })
     try {
+        const newestDocument = await DailyOrder
+        .findOne()
+        .sort({ date: -1 }) // Sort in descending order to get the newest date first
+        .limit(1); // Limit the result to just one document
+        const nextDate = getNextDayMidnight(newestDocument.date)
+        const newDay = new DailyOrder({
+            date: nextDate,
+            orders: []
+        })
         await newDay.save()
         //flexi
         const existingFlexiDay = await DayFlexi.findOne({date: nextDate});
-        if (!existingFlexiDay) {
             const flexiMeals = await Meals.find({}).limit(30);
-            console.log(flexiMeals)
-            const flexiMorningArr = flexiMeals.map((meal, idx) => {
-                if (idx <= 5) {
-                    return meal._id
-                }
-            })
-            const flexiLunchArr = flexiMeals.map((meal, idx) => {
-                if (idx > 5 && idx <= 11) {
-                    return meal._id
-                }
-            })
-            const flexiDinnerArr = flexiMeals.map((meal, idx) => {
-                if (idx > 11 && idx <= 16) {
-                    return meal._id
-                }
-            })
-            const flexiTeatimeArr = flexiMeals.map((meal, idx) => {
-                if (idx > 16 && idx <= 23) {
-                    return meal._id
-                }
-            })
-            const flexiSupperArr = flexiMeals.map((meal, idx) => {
-                if (idx > 23 && idx <= 29) {
-                    return meal._id
-                }
-            })
+        if (!existingFlexiDay) {
+            let globalFlexiIndex = 0;
+            const flexiMorningArr = []
+            const flexiLunchArr = []
+            const flexiDinnerArr = []
+            const flexiTeatimeArr = []
+            const flexiSupperArr = []
+            for (globalFlexiIndex; globalFlexiIndex < 6; globalFlexiIndex++) {
+                flexiMorningArr.push(flexiMeals[globalFlexiIndex]._id)
+            }
+            for (globalFlexiIndex; globalFlexiIndex < 12; globalFlexiIndex++) {
+                flexiLunchArr.push(flexiMeals[globalFlexiIndex]._id)
+            }
+            for (globalFlexiIndex; globalFlexiIndex < 18; globalFlexiIndex++) {
+                flexiDinnerArr.push(flexiMeals[globalFlexiIndex]._id)
+            }
+            for (globalFlexiIndex; globalFlexiIndex < 24; globalFlexiIndex++) {
+                flexiTeatimeArr.push(flexiMeals[globalFlexiIndex]._id)
+            }
+            for (globalFlexiIndex; globalFlexiIndex < 30; globalFlexiIndex++) {
+                flexiSupperArr.push(flexiMeals[globalFlexiIndex]._id)
+            }
 
             const flexiObj = new DayFlexi({
-                date: getNextDayMidnight(),
+                date: nextDate,
                 morning_meals: flexiMorningArr,
                 lunch_meals: flexiLunchArr,
                 dinner_meals: flexiDinnerArr,
@@ -63,16 +62,16 @@ export const initDay = async () => {
                 return {
                     diet_id: dietId,
                     meals: {
-                        morning: flexiMeals[0],
-                        lunch: flexiMeals[0],
-                        dinner: flexiMeals[0],
-                        teatime: flexiMeals[0],
-                        supper: flexiMeals[0],
+                        morning: flexiMeals[Math.floor(Math.random() * 30)]._id,
+                        lunch: flexiMeals[Math.floor(Math.random() * 30)]._id,
+                        dinner: flexiMeals[Math.floor(Math.random() * 30)]._id,
+                        teatime: flexiMeals[Math.floor(Math.random() * 30)]._id,
+                        supper: flexiMeals[Math.floor(Math.random() * 30)]._id,
                     }
                 }
             });
             const fixedDietDocument = new DayFixed({
-                date: getNextDayMidnight(),
+                date: nextDate,
                 diets: dietsArr
             })
             await fixedDietDocument.save();

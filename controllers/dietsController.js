@@ -165,7 +165,6 @@ export const deleteDiet = async (req, res, next) => {
             return next(ApiError('Diet does not exist!', 404))
         }
         const mealPath = path.join('public', 'images', deletedDiet.img.img_path)
-        console.log(mealPath)
         if(deletedDiet.img.img_path !== ''){
             const mealsWithSameImage = await Meal.find({"img.img_path": deletedDiet.img.img_path})
             const dietsWithSameImage = await Diet.find({"img.img_path": deletedDiet.img.img_path})

@@ -80,8 +80,6 @@ export const addAddress = async (req, res, next) => {
 
     const addressData = req.body.address;
     const userId = req.body.userId;
-    console.log(userId)
-    console.log(addressData)
     const newAddress = new Address({
         street: addressData.street,
         city: addressData.city,
@@ -97,7 +95,6 @@ export const addAddress = async (req, res, next) => {
     try {
         const returnAddress = await newAddress.save()
         const user = await User.findById(userId).select('addresses');
-        console.log(user)
         const userAddresses = user.addresses
         const newAddresses = [...userAddresses, returnAddress._id]
         await User.updateOne({_id: userId}, {addresses: newAddresses})
@@ -118,7 +115,6 @@ export const updateAddress = async (req, res, next) => {
     }
     const addressId = req.params.id;
     const addressData = { ...req.body.address, userId: req.body.userId }
-    console.log(addressData)
     try {
         const updatedAddress = await Address.findByIdAndUpdate(addressId, addressData, {returnDocument: "after"})
         res.status(200)

@@ -1,5 +1,4 @@
 import {Stripe} from "stripe";
-import {log} from "debug";
 import Order from "../models/ordersModel.js";
 import User from "../models/userModel.js";
 import {parseIntoMidnightISO} from "../utils/dates.js";
@@ -41,7 +40,6 @@ export const processPayment = async (req, res, next) => {
         ordersWithoutTokens.forEach((order, idx) => {
             ordersObj[`order${idx}`] = JSON.stringify(order)
         })
-        console.log(ordersObj)
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,
@@ -56,8 +54,6 @@ export const processPayment = async (req, res, next) => {
         next(e)
     }
 }
-// TODO: Change webhook secret on prod
-const endpointSec = process.env.STRIPE_WEBHOOK
 const createOrders = async (metaOrders, appliedPromocode) => {
     const orders = Object.values(metaOrders).map(item => JSON.parse(item));
     const userId = orders[0].user_id
@@ -65,7 +61,7 @@ const createOrders = async (metaOrders, appliedPromocode) => {
     try {
         for (const mongoOrder of mongoOrders) {
             const createdOrder = await mongoOrder.save()
-            await User.findByIdAndUpdate(mongoOrder.userId, {$push: {'order_ids': createdOrder._id}})
+            await User.findByIdAndUpdate(mongoOrder.user_id, {$push: {'order_ids': createdOrder._id}})
         }
         if (appliedPromocode !== '') {
             const userCodes = await User.findById(userId).select("redeemed_codes");
@@ -82,7 +78,7 @@ export const fulfill = async (req, res, next) => {
     const sig = req.headers['stripe-signature']
     let event;
     try {
-        event = stripe.webhooks.constructEvent(payload, sig, endpointSec);
+        event = stripe.webhooks.constructEvent(payload, sig, process.env.STRIPE_WEBHOOK);
     } catch (e) {
         return next(e)
     }

@@ -20,7 +20,7 @@ export const getMeals = async (req, res, next) => {
                     return {...meal._doc, imageBuffer: null}
                 }
                 let mealPath = path.join('public', 'images', meal.img.img_path);
-                const data = fs.readFileSync(mealPath, {encoding: 'base64'})
+                const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}) : null
                 return {...meal._doc, imageBuffer: data}
             })
             const totalItems = await Meal.find({}).countDocuments()
@@ -53,7 +53,7 @@ export const getMealById = async (req, res, next) => {
             return next(ApiError('Meal does not exist', 404))
         }
         let mealPath = path.join('public', 'images', meal.img.img_path);
-        const data = fs.readFileSync(mealPath, {encoding: 'base64'})
+        const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}) : null
 
         res.status(200)
         res.json({...meal._doc, imageBuffer: data})
@@ -70,7 +70,6 @@ export const createMeal = async (req, res, next) => {
         const mealData = JSON.parse(req.body.data);
         let fileObj = {img_path: '', uri: ''}
         const file = req.file;
-        console.log(file)
         if (file) {
             const fileBytes = fs.readFileSync(file.path);
             const fileUri = crypto.createHash('sha1').update(fileBytes).digest('hex')
@@ -122,7 +121,6 @@ export const updateMeal = async (req, res, next) => {
         });
         if (fileUri !== existingMeal.img.uri) {
             const mealPath = path.join('public', 'images', existingMeal.img.img_path)
-            console.log(mealPath)
             if(existingMeal.img.img_path !== ''){
                 const mealsWithSameImage = await Meal.find({"img.img_path": existingMeal.img.img_path})
                 const dietsWithSameImage = await Diet.find({"img.img_path": existingMeal.img.img_path})
@@ -153,7 +151,6 @@ export const deleteMeal = async (req, res, next) => {
             return next(ApiError('Meal does not exist', 404))
         }
         const mealPath = path.join('public', 'images', deletedMeal.img.img_path)
-        console.log(mealPath)
         if(deletedMeal.img.img_path !== ''){
             const mealsWithSameImage = await Meal.find({"img.img_path": deletedMeal.img.img_path})
             const dietsWithSameImage = await Diet.find({"img.img_path": deletedMeal.img.img_path})

@@ -141,7 +141,6 @@ export const addOrderToList = async (req, res, next) => {
 export const lockAddingOrders = async () => {
     const currentDate = new Date().setHours(1, 0, 0, 0);
     const currentDateISO = new Date(currentDate).toISOString();
-    console.log(currentDateISO)
     try{
         const dailyEntry = await DailyOrder.findOne({date: currentDateISO});
         const users = await User.find({});
@@ -174,17 +173,14 @@ export const lockAddingOrders = async () => {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }
-                if (isWeekend(currentDate) === orderFromCollection.with_weekends) {
+                if (isWeekend(currentDate) && !orderFromCollection.with_weekends) {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }
                 const associatedDiet = await Diet.findById(orderFromCollection.diet_id);
                 if (associatedDiet.diet_type === 'Fixed') {
                     const diet = await DayFixed.findOne({date: currentDateISO})
-                    console.log(diet)
-                    console.log(orderFromCollection.diet_id)
                     let dietMeals = (diet.diets.find(diet => (diet.diet_id).toString() === (orderFromCollection.diet_id).toString())).meals
-                    console.log(dietMeals)
                     const fixedDietMeals = Object.values(dietMeals).slice(0, 5)
                     const updateObj = {
                         user_id: userId,

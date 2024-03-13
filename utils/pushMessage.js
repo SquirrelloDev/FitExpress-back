@@ -54,7 +54,15 @@ export const sendNotification = async (payloadData) => {
             privateKey: process.env.VAPID_SEC
         }
     }
-    allSubs.forEach(sub => {
-        webpush.sendNotification(sub, payloadData, options);
-    });
+    let i = 0
+    try {
+    for (i; i < allSubs.length; i++) {
+        await webpush.sendNotification(allSubs[i], payloadData, options);
+    }
+    }
+    catch (err) {
+        if (err.statusCode === 404 || err.statusCode === 410) {
+            await Webpush.findOneAndDelete({endpoint: allSubs[i].endpoint})
+        }
+    }
 }
