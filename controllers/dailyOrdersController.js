@@ -141,7 +141,6 @@ export const addOrderToList = async (req, res, next) => {
 export const lockAddingOrders = async () => {
     const currentDate = new Date().setHours(1, 0, 0, 0);
     const currentDateISO = new Date(currentDate).toISOString();
-    console.log(currentDateISO)
     try{
         const dailyEntry = await DailyOrder.findOne({date: currentDateISO});
         const users = await User.find({});
@@ -174,7 +173,7 @@ export const lockAddingOrders = async () => {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }
-                if (isWeekend(currentDate) === orderFromCollection.with_weekends) {
+                if (isWeekend(currentDate) && !orderFromCollection.with_weekends) {
                     console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
                     continue;
                 }
