@@ -161,7 +161,7 @@ export const updateUserHealthcard = async (req, res, next) => {
     const healthData = req.body.healthData
     const birthDate = req.body.birthDate;
     try {
-        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData, birth_date: birthDate})
+        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData, birth_date: parseIntoMidnightISO(birthDate)})
         res.status(200);
         return res.json({
             message: 'Health card updated!'
