@@ -67,7 +67,6 @@ export const getFixedDay = async (req, res, next) => {
     const date = req.query.date;
     try {
         const isoDate = parseIntoMidnightISO(date);
-
         // TODO: Delete later
         console.log(date)
         console.log(isoDate)
