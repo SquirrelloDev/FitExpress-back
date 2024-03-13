@@ -44,8 +44,8 @@ export const processPayment = async (req, res, next) => {
             payment_method_types: ['card'],
             line_items: lineItems,
             mode: 'payment',
-            success_url: 'http://localhost:5173/cart/payment/success',
-            cancel_url: 'http://localhost:5173/cart',
+            success_url: `${process.env.CLIENT_URL}/cart/payment/success`,
+            cancel_url: `${process.env.CLIENT_URL}/cart`,
             metadata: {...ordersObj, appliedPromocode: req.body.appliedPromocode}
         }, {apiKey: process.env.STRIPE_SK})
         res.status(200)
