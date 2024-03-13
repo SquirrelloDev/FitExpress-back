@@ -20,7 +20,11 @@ export const getMeals = async (req, res, next) => {
                     return {...meal._doc, imageBuffer: null}
                 }
                 let mealPath = path.join('public', 'images', meal.img.img_path);
-                const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}) : null
+                const data = meal.img.img_path ? fs.readFileSync(mealPath, {encoding: 'base64'}, (err, data) => {
+                    if(err){
+                        return null;
+                    }
+                }) : null
                 return {...meal._doc, imageBuffer: data}
             })
             const totalItems = await Meal.find({}).countDocuments()
