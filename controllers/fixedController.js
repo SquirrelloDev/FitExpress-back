@@ -69,6 +69,7 @@ export const getFixedDay = async (req, res, next) => {
         const isoDate = parseIntoMidnightISO(date);
         // TODO: Delete later
         console.log(date)
+
         console.log(isoDate)
         const fixedDay = await DayFixed.findOne({date: isoDate}).populate({
             path: 'diets',
