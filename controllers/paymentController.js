@@ -40,7 +40,6 @@ export const processPayment = async (req, res, next) => {
         ordersWithoutTokens.forEach((order, idx) => {
             ordersObj[`order${idx}`] = JSON.stringify(order)
         })
-        console.log(ordersObj)
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,

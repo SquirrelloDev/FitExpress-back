@@ -180,10 +180,7 @@ export const lockAddingOrders = async () => {
                 const associatedDiet = await Diet.findById(orderFromCollection.diet_id);
                 if (associatedDiet.diet_type === 'Fixed') {
                     const diet = await DayFixed.findOne({date: currentDateISO})
-                    console.log(diet)
-                    console.log(orderFromCollection.diet_id)
                     let dietMeals = (diet.diets.find(diet => (diet.diet_id).toString() === (orderFromCollection.diet_id).toString())).meals
-                    console.log(dietMeals)
                     const fixedDietMeals = Object.values(dietMeals).slice(0, 5)
                     const updateObj = {
                         user_id: userId,
