@@ -1,5 +1,4 @@
 import {Stripe} from "stripe";
-import {log} from "debug";
 import Order from "../models/ordersModel.js";
 import User from "../models/userModel.js";
 import {parseIntoMidnightISO} from "../utils/dates.js";
@@ -56,7 +55,6 @@ export const processPayment = async (req, res, next) => {
         next(e)
     }
 }
-// TODO: Change webhook secret on prod
 const createOrders = async (metaOrders, appliedPromocode) => {
     const orders = Object.values(metaOrders).map(item => JSON.parse(item));
     const userId = orders[0].user_id
