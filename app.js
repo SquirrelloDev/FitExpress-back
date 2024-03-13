@@ -24,19 +24,11 @@ import {errorMiddleware} from "./middleware/errorMiddleware.js";
 import {paymentsRouter} from "./routes/payments.js";
 import {fulfill} from "./controllers/paymentController.js";
 import {webpushRouter} from "./routes/webpush.js";
+import setupCronJobs from './utils/cronSetup.js'
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
 const app = express();
-const diskStorage = multer.diskStorage({
-    destination: (req,file,cb) => {
-        cb(null, 'public/images')
-    },
-    filename: (req,file,cb) => {
-      cb(null, file.originalname)
-    }
-})
-const upload = multer({dest: '/public/images', storage: diskStorage})
 app.use(logger('dev'));
 app.use(cors())
 app.post('/webhook', bodyParser.raw({type: 'application/json'}) ,fulfill)
@@ -69,8 +61,7 @@ app.use('/delivery', deliveryRouter);
 app.use('/daily', dailyRouter);
 app.use('/payments', paymentsRouter);
 app.use('/push', webpushRouter)
-//TODO: enable cronjobs when the time comes
-// setupCronJobs();
+setupCronJobs();
 //error middleware
 app.use(errorMiddleware)
 app.listen(3001)
