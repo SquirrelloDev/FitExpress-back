@@ -25,6 +25,7 @@ import {paymentsRouter} from "./routes/payments.js";
 import {fulfill} from "./controllers/paymentController.js";
 import {webpushRouter} from "./routes/webpush.js";
 import setupCronJobs from './utils/cronSetup.js'
+import {ensureDirectoryExists} from "./utils/directory.js";
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 config({ path: './config/.env'});
@@ -44,6 +45,7 @@ app.use((req, res, next) => {
     //przesyłamy te headery dalej
     next();
 })
+ensureDirectoryExists('./public')
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/users', usersRouter);
