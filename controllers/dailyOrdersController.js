@@ -92,8 +92,8 @@ export const addOrderToList = async (req, res, next) => {
     const orderData = req.body;
     //check if date timestamp is within the current day timespan
 
-    let reqTimestamp = new Date(orderData.date).setHours(1, 0, 0, 0);
-    const today = new Date().setHours(1, 0, 0, 0)
+    let reqTimestamp = new Date(orderData.date).setHours(0, 0, 0, 0);
+    const today = new Date().setHours(0, 0, 0, 0)
     if (reqTimestamp === today) {
         return next(ApiError('Incorrect date', 400))
     }
