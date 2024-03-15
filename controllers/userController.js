@@ -187,7 +187,7 @@ export const requestChangePassword = async (req, res, next) => {
         //send mail
         await sendRequestPasswordMail(user.email, token);
         res.status(201);
-        res.json({message: 'Email has been sent with reset link', token})
+        res.json({message: 'Email has been sent with reset link'})
     } catch (e) {
         next(e);
     }

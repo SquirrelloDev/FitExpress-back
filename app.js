@@ -5,7 +5,6 @@ import logger from 'morgan'
 import bodyParser from "body-parser";
 import mongoose from "mongoose";
 import cors from 'cors'
-import multer from 'multer'
 import {config} from "dotenv";
 import { usersRouter } from './routes/users.js'
 import {promocodesRouter} from "./routes/promocodes.js";

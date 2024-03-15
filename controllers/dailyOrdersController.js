@@ -94,7 +94,7 @@ export const addOrderToList = async (req, res, next) => {
 
     let reqTimestamp = new Date(orderData.date).setHours(1, 0, 0, 0);
     const today = new Date().setHours(1, 0, 0, 0)
-    if (reqTimestamp !== today) {
+    if (reqTimestamp === today) {
         return next(ApiError('Incorrect date', 400))
     }
     try {
