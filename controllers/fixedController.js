@@ -157,7 +157,7 @@ export const createFixedDayEntry = async (req, res, next) => {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
     const dayData = req.body;
-    const midnightDate = parseIntoMidnightISO(dayData.date);
+    const midnightDate = dayData.date;
     const dayFixed = new DayFixed({
         ...dayData,
         date: midnightDate

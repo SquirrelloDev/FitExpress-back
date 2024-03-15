@@ -17,8 +17,8 @@ export const processPayment = async (req, res, next) => {
                 address_id: order.order.addressId,
                 name: order.order.name,
                 sub_date: {
-                    from: parseIntoMidnightISO(order.order.subDate.from),
-                    to: parseIntoMidnightISO(order.order.subDate.to),
+                    from: order.order.subDate.from,
+                    to: order.order.subDate.to,
                 },
                 ...(order.order.flexiTier && {flexi_tier: order.order.flexiTier})
             }

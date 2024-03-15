@@ -20,7 +20,7 @@ export const sendRequestPasswordMail = async (email,token) => {
     const mail = await transporter.sendMail({
         to: email,
         from: 'fitexpress@sendinblue.com',
-        subject: 'Test zmiana hasła',
+        subject: 'Zmiana hasła',
         html:
             `
             <h1>Zmiana hasła</h1>

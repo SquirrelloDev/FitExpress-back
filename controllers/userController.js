@@ -78,7 +78,7 @@ export const addNewUser = async (req, res, next) => {
             name: userData.name,
             email: userData.email,
             phone: userData.phone,
-            birth_date: userData.birth_date ? parseIntoMidnightISO(new Date(userData.birth_date)) : new Date("1970-01-02"),
+            birth_date: userData.birth_date ? new Date(userData.birth_date) : new Date("1970-01-02"),
             password: hashPasswd,
             health_data: userData.healthData ? userData.healthData : defaultHealthData,
             role: userData.role ? userData.role : process.env.ACCESS_USER
@@ -161,7 +161,7 @@ export const updateUserHealthcard = async (req, res, next) => {
     const healthData = req.body.healthData
     const birthDate = req.body.birthDate;
     try {
-        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData, birth_date: parseIntoMidnightISO(birthDate)})
+        const user = await User.findByIdAndUpdate(req.body._id, {health_data: healthData, birth_date: birthDate})
         res.status(200);
         return res.json({
             message: 'Health card updated!'

@@ -84,7 +84,7 @@ export const createDayEntry = async (req, res, next) => {
 
     try {
         const dayFlexi = new DayFlexi({
-            date: parseIntoMidnightISO(dayData.date),
+            date: dayData.date,
             morning_meals: dayData.morningMeals,
             lunch_meals: dayData.lunchMeals,
             dinner_meals: dayData.dinnerMeals,
