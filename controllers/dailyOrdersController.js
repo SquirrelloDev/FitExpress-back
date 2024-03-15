@@ -156,7 +156,7 @@ export const lockAddingOrders = async () => {
                 }
             }).filter(item => item !== undefined);
             //to z kolekcji users
-            const allOrdersForCurrentUser = users.find(user => user._id === userId).order_ids
+            const allOrdersForCurrentUser = users.find(user => user._id === userId).order_ids;
             //wyfiltruj te ordery, znajdują się w EXISTING ORDERS (w ten sposób zostaną niedodane ordery przez użytkowników)
             const ordersToAdd = allOrdersForCurrentUser.filter(existingOrder => {
                 if (!existingORDERS.includes(existingOrder.toString())) {
