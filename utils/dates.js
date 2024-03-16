@@ -6,7 +6,7 @@ export const isWeekend = (date) => {
 export const getNextDayMidnight = (date) => {
   const currentDate = new Date(date);
   currentDate.setDate(currentDate.getDate() + 1)
-  currentDate.setHours(1,0,0, 0);
+  // currentDate.setHours(1,0,0, 0);
   return currentDate
 }
 export const parseIntoMidnightISO = (date) => {
