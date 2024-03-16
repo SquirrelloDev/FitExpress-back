@@ -86,7 +86,7 @@ export const createReport = async (req, res, next) => {
         order_id: reportData.orderId,
         user_id: reportData.userId,
         report_status: 'new',
-        delivery_date: getNextDayMidnight(reportData.deliveryDate),
+        delivery_date: reportData.deliveryDate,
         created_at: new Date()
     })
     try {
@@ -113,7 +113,7 @@ export const updateReport = async (req, res, next) => {
             ...reportData,
             report_status: reportData.reportStatus,
             order_id: reportData.orderId,
-            delivery_date: getNextDayMidnight(reportData.deliveryDate),
+            delivery_date: reportData.deliveryDate,
         })
         if (!updatedReport) {
             return next(ApiError("Report does not exist!", 404))

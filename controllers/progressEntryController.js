@@ -59,14 +59,14 @@ export const addEntry = async (req, res, next) => {
                 if (Object.keys(entryData.data).includes('water')) {
                     return next(ApiError("The 'weight' key should appear for this kind", 422))
                 }
-                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: getNextDayMidnight(entryData.data.date), weight: entryData.data.weight} }});
+                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: entryData.data.date, weight: entryData.data.weight} }});
                 break;
             case 'water':
                 if (Object.keys(entryData.data).includes('weight')) {
                     return next(ApiError("The 'water' key should appear for this kind", 422))
                 }
                 await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"water_progress": {
-                        date: getNextDayMidnight(entryData.data.date),
+                        date: entryData.data.date,
                             water: entryData.data.water
                         }}});
                 break;
@@ -84,7 +84,7 @@ export const updateEntry = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = getNextDayMidnight(req.query.date);
+    const date = req.query.date;
     const entryData = req.body;
     const userId = entryData.userId;
     const selectArr = req.query.kind === 'weight' ? 'weight_progress' : 'water_progress';
