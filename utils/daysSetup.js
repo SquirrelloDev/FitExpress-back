@@ -11,7 +11,7 @@ export const initDay = async () => {
         .findOne()
         .sort({ date: -1 }) // Sort in descending order to get the newest date first
         .limit(1); // Limit the result to just one document
-        const nextDate = newestDocument.date
+        const nextDate = getNextDayMidnight(newestDocument.date)
         const newDay = new DailyOrder({
             date: nextDate,
             orders: []
