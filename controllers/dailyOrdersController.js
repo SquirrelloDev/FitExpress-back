@@ -4,7 +4,7 @@ import Order from '../models/ordersModel.js'
 import Diet from '../models/dietsModel.js'
 import DayFixed from '../models/fixedModel.js';
 import DayFlexi from '../models/flexiModel.js'
-import {isWeekend} from "../utils/dates.js";
+import {isWeekend, parseIntoMidnightISO} from "../utils/dates.js";
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
 
@@ -139,7 +139,7 @@ export const addOrderToList = async (req, res, next) => {
 }
 
 export const lockAddingOrders = async () => {
-    const currentDate = new Date().setHours(1, 0, 0, 0);
+    const currentDate = parseIntoMidnightISO(new Date());
     const currentDateISO = new Date(currentDate).toISOString();
     try{
         const dailyEntry = await DailyOrder.findOne({date: currentDateISO});
