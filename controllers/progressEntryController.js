@@ -53,20 +53,21 @@ export const addEntry = async (req, res, next) => {
     const entryData = req.body;
     const userId = entryData.userId;
     const entryKind = req.query.kind;
+    console.log(entryData.data.date, entryData.data.date)
     try {
         switch (entryKind) {
             case 'weight':
                 if (Object.keys(entryData.data).includes('water')) {
                     return next(ApiError("The 'weight' key should appear for this kind", 422))
                 }
-                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: entryData.data.date, weight: entryData.data.weight} }});
+                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: parseIntoMidnightISO(entryData.data.date), weight: entryData.data.weight} }});
                 break;
             case 'water':
                 if (Object.keys(entryData.data).includes('weight')) {
                     return next(ApiError("The 'water' key should appear for this kind", 422))
                 }
                 await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"water_progress": {
-                        date: entryData.data.date,
+                        date: parseIntoMidnightISO(entryData.data.date),
                             water: entryData.data.water
                         }}});
                 break;
