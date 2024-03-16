@@ -1,7 +1,7 @@
 import ProgessEntry from '../models/progressEntryModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
-import {parseIntoMidnightISO} from "../utils/dates.js";
+import {getNextDayMidnight, parseIntoMidnightISO} from "../utils/dates.js";
 
 export const getAllProgress = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)) {
@@ -53,21 +53,20 @@ export const addEntry = async (req, res, next) => {
     const entryData = req.body;
     const userId = entryData.userId;
     const entryKind = req.query.kind;
-    console.log(entryData.data.date, entryData.data.date)
     try {
         switch (entryKind) {
             case 'weight':
                 if (Object.keys(entryData.data).includes('water')) {
                     return next(ApiError("The 'weight' key should appear for this kind", 422))
                 }
-                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: parseIntoMidnightISO(entryData.data.date), weight: entryData.data.weight} }});
+                await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"weight_progress": {date: getNextDayMidnight(entryData.data.date), weight: entryData.data.weight} }});
                 break;
             case 'water':
                 if (Object.keys(entryData.data).includes('weight')) {
                     return next(ApiError("The 'water' key should appear for this kind", 422))
                 }
                 await ProgessEntry.findOneAndUpdate({user_id: userId}, {$push: {"water_progress": {
-                        date: parseIntoMidnightISO(entryData.data.date),
+                        date: getNextDayMidnight(entryData.data.date),
                             water: entryData.data.water
                         }}});
                 break;
@@ -85,7 +84,7 @@ export const updateEntry = async (req, res, next) => {
     if (!await checkPermissions(req.userInfo, process.env.ACCESS_USER)) {
         return next(ApiError("You're not authorized to perform this action!", 401))
     }
-    const date = new Date(req.query.date);
+    const date = getNextDayMidnight(req.query.date);
     const entryData = req.body;
     const userId = entryData.userId;
     const selectArr = req.query.kind === 'weight' ? 'weight_progress' : 'water_progress';

@@ -1,6 +1,7 @@
 import Report from '../models/reportsModel.js'
 import {ApiError} from "../utils/errors.js";
 import {checkPermissions} from "../utils/auth.js";
+import {getNextDayMidnight} from "../utils/dates.js";
 
 export const getAllReports = async (req, res, next) => {
     if(!await checkPermissions(req.userInfo, process.env.ACCESS_DIETETICIAN)){
@@ -85,7 +86,7 @@ export const createReport = async (req, res, next) => {
         order_id: reportData.orderId,
         user_id: reportData.userId,
         report_status: 'new',
-        delivery_date: reportData.deliveryDate,
+        delivery_date: getNextDayMidnight(reportData.deliveryDate),
         created_at: new Date()
     })
     try {
@@ -112,7 +113,7 @@ export const updateReport = async (req, res, next) => {
             ...reportData,
             report_status: reportData.reportStatus,
             order_id: reportData.orderId,
-            delivery_date: reportData.deliveryDate,
+            delivery_date: getNextDayMidnight(reportData.deliveryDate),
         })
         if (!updatedReport) {
             return next(ApiError("Report does not exist!", 404))
