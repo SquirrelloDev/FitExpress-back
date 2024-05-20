@@ -7,7 +7,7 @@ import Transport from "nodemailer-brevo-transport";
     }))
     const test = await transporter.sendMail({
         to: 'johndoe@gmail.com',
-        from: 'fitexpress@gmail.com',
+        from: 'fitexpress@sendinblue.com',
         subject: 'Dziękujemy za zakupy',
         html: '<h1>Oto twoja fakturka</h1> '
     });
@@ -30,5 +30,4 @@ export const sendRequestPasswordMail = async (email,token) => {
             <p>Jeśli to nie ty, zignoruj tę wiadomość i powiadom nas o problemie</p>
             `
     })
-    console.log('Recieved', mail)
 }

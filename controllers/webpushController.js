@@ -1,5 +1,4 @@
 import Webpush from '../models/webpushModel.js'
-import webpush from 'web-push'
 import {sendNotification} from "../utils/pushMessage.js";
 import {checkPermissions} from "../utils/auth.js";
 import {ApiError} from "../utils/errors.js";

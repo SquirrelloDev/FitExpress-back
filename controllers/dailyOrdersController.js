@@ -149,15 +149,15 @@ export const lockAddingOrders = async () => {
         await DailyOrder.findOneAndUpdate({date: currentDateISO}, {isAddingLocked: true});
 
         for (const userId of plainUserIdsArr) {
-            //to z kolekcji daily orders
+            //DAILY ORDERS collection
             const existingORDERS = orders.map(order => {
                 if ((order.user_id).toString() === userId.toString()) {
                     return (order.order_id).toString();
                 }
             }).filter(item => item !== undefined);
-            //to z kolekcji users
+            //USERS collection
             const allOrdersForCurrentUser = users.find(user => user._id === userId).order_ids;
-            //wyfiltruj te ordery, znajdują się w EXISTING ORDERS (w ten sposób zostaną niedodane ordery przez użytkowników)
+            //filter out those orders which are already in EXISTING ORDERS variable (hence there will be only orders not added by the users)
             const ordersToAdd = allOrdersForCurrentUser.filter(existingOrder => {
                 if (!existingORDERS.includes(existingOrder.toString())) {
                     return existingOrder
@@ -166,15 +166,15 @@ export const lockAddingOrders = async () => {
             if (ordersToAdd.length === 0) {
                 continue;
             }
-            //sprawdź które z brakujących orderów są aktywne poprzez datę oraz te, które mają ustawiony adres. Jeśli mieszczą się w dacie to oznacza że dany order jest AKTYWNY!
+            //check, which "missing" orders are active by checking the subscription date, set up address. If the order fits in the time range, the order is ACTIVE!
             for (const orderToAdd of ordersToAdd) {
                 const orderFromCollection = await Order.findById(orderToAdd.toString());
                 if (((orderFromCollection.sub_date.from).getTime() > currentDate || currentDate > (orderFromCollection.sub_date.to).getTime()) || !orderFromCollection.address_id) {
-                    console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
+                    console.log(`Order ${orderToAdd} is inactive due to sub date or address. Moving to next order`);
                     continue;
                 }
                 if (isWeekend(currentDate) && !orderFromCollection.with_weekends) {
-                    console.log(`Order ${orderToAdd} is inactive. Moving to next order`);
+                    console.log(`Order ${orderToAdd} is inactive due to weekend. Moving to next order`);
                     continue;
                 }
                 const associatedDiet = await Diet.findById(orderFromCollection.diet_id);
